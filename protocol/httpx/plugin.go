@@ -1,6 +1,8 @@
 package httpx
 
-import "net/http"
+import (
+	"net/http"
+)
 import "github.com/julienschmidt/httprouter"
 
 type Plugin interface {
