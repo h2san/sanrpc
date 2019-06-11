@@ -16,7 +16,6 @@ import (
 // ReaderBuffSize is used for bufio reader.
 const ReaderBuffSize = 16 * 1024
 
-
 type makeConnFn func(c *Client, network, address string) (net.Conn, error)
 
 var makeConnMap = make(map[string]makeConnFn)
