@@ -45,19 +45,6 @@ func (p *HTTProtocol) handle(w http.ResponseWriter,req *http.Request, param http
 	ctx := context.Background()
 
 	switch param.ByName("protocol") {
-	case "rpc":
-		data, err := ioutil.ReadAll(req.Body)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		err = json.Unmarshal(data, argv)
-		if err != nil {
-			writeErrResponse(w, HTTPX_REQ_UNMARSHAL_ERR, err.Error())
-			return
-		}
-		ctx = context.WithValue(ctx,HTTPRequestKey,req)
-		break
 	case "ws":
 		if p.ws == nil {
 			p.ws = &websocket.Upgrader{
@@ -72,14 +59,20 @@ func (p *HTTProtocol) handle(w http.ResponseWriter,req *http.Request, param http
 		}
 		ctx= context.WithValue(ctx,WebSocketKey,conn)
 		break
-	case "web":
-		ctx = context.WithValue(ctx,HTTPRequestKey,req)
-		break
 	default:
-		http.NotFound(w,req)
-		return
+		data, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = json.Unmarshal(data, argv)
+		if err != nil {
+			writeErrResponse(w, HTTPX_REQ_UNMARSHAL_ERR, err.Error())
+			return
+		}
+		ctx = context.WithValue(ctx,HTTPRequestKey,req)
+		w.Header().Set("Content-Type","application/json")
 	}
-
 
 	var err error
 	if mtype.ArgType.Kind() != reflect.Ptr {
@@ -93,14 +86,8 @@ func (p *HTTProtocol) handle(w http.ResponseWriter,req *http.Request, param http
 		return
 	}
 
-	if param.ByName("protocol") == "rpc" {
-		resData, err := json.Marshal(replyv)
-		if err != nil {
-			writeErrResponse(w, HTTPX_RESP_MARSHAL_ERR, err.Error())
-			return
-		}
-
-		w.Write(resData)
+	if w.Header().Get("Content-Type") == "application/json"{
+		writeResponse(w,0,"success", replyv)
 	}
 
 }
