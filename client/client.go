@@ -4,14 +4,15 @@ import (
 	"bufio"
 	"context"
 	"errors"
-	"github.com/h2san/sanrpc/codec"
-	"github.com/h2san/sanrpc/log"
-	"github.com/h2san/sanrpc/protocol/sanrpc"
-	"github.com/h2san/sanrpc/share"
 	"io"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/h2san/sanrpc/codec"
+	"github.com/h2san/sanrpc/log"
+	"github.com/h2san/sanrpc/protocol/sanrpc"
+	"github.com/h2san/sanrpc/share"
 )
 
 // ErrShutdown connection is closed.
@@ -29,6 +30,15 @@ func (e ServiceError) Error() string {
 
 type seqKey struct{}
 
+// RPCClient is interface that defines one client to call one server.
+type RPCClient interface {
+	Connect(network, address string) error
+	Go(ctx context.Context, servicePath, serviceMethod string, args interface{}, reply interface{}, done chan *Call) *Call
+	Call(ctx context.Context, servicePath, serviceMethod string, args interface{}, reply interface{}) error
+	Close() error
+	IsClosing() bool
+	IsShutdown() bool
+}
 type Client struct {
 	option Option
 	Conn   net.Conn
@@ -73,10 +83,10 @@ func (client *Client) Go(ctx context.Context, servicePath, serviceMethod string,
 	call.CompressType = codec.CompressNone
 	call.SerializeType = codec.ProtoBuffer
 
-	if compressType, ok :=ctx.Value(share.CallCompressType).(codec.CompressType); ok{
+	if compressType, ok := ctx.Value(share.CallCompressType).(codec.CompressType); ok {
 		call.CompressType = compressType
 	}
-	if serializeType, ok := ctx.Value(share.CallSerializeType).(codec.SerializeType); ok{
+	if serializeType, ok := ctx.Value(share.CallSerializeType).(codec.SerializeType); ok {
 		call.SerializeType = serializeType
 	}
 
