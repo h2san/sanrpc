@@ -1,7 +1,7 @@
 package codec
 
 import (
-	"github.com/h2san/sanrpc/util"
+	"github.com/hillguo/sanrpc/util"
 )
 
 

@@ -2,7 +2,7 @@ package httpx
 
 import (
 	"github.com/gorilla/websocket"
-	"github.com/h2san/sanrpc/protocol"
+	"github.com/hillguo/sanrpc/protocol"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 )

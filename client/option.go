@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"time"
 
-	"github.com/h2san/sanrpc/share"
+	"github.com/hillguo/sanrpc/share"
 )
 
 type Option struct {

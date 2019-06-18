@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/h2san/sanrpc/codec"
-	"github.com/h2san/sanrpc/log"
+	"github.com/hillguo/sanrpc/codec"
+	"github.com/hillguo/sanrpc/log"
 )
 
 type Call struct {

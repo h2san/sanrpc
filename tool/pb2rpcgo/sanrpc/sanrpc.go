@@ -243,8 +243,8 @@ const tpltcpserver = `package main
 
 import (
 	"flag"
-	"github.com/h2san/sanrpc/protocol/sanrpc"
-	"github.com/h2san/sanrpc/server"
+	"github.com/hillguo/sanrpc/protocol/sanrpc"
+	"github.com/hillguo/sanrpc/server"
 	"{{.PackageName}}/{{.PackageName}}"
 )
 

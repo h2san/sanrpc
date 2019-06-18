@@ -3,8 +3,8 @@ package sanrpc
 import (
 	"context"
 	"fmt"
-	"github.com/h2san/sanrpc/codec"
-	"github.com/h2san/sanrpc/protocol"
+	"github.com/hillguo/sanrpc/codec"
+	"github.com/hillguo/sanrpc/protocol"
 	"github.com/pkg/errors"
 	"io"
 	"reflect"

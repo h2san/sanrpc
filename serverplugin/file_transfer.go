@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/golang-lru"
-	"github.com/h2san/sanrpc/log"
-	"github.com/h2san/sanrpc/server"
+	"github.com/hillguo/sanrpc/log"
+	"github.com/hillguo/sanrpc/server"
 )
 
 var (

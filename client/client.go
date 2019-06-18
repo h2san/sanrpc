@@ -9,10 +9,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/h2san/sanrpc/codec"
-	"github.com/h2san/sanrpc/log"
-	"github.com/h2san/sanrpc/protocol/sanrpc"
-	"github.com/h2san/sanrpc/share"
+	"github.com/hillguo/sanrpc/codec"
+	"github.com/hillguo/sanrpc/log"
+	"github.com/hillguo/sanrpc/protocol/sanrpc"
+	"github.com/hillguo/sanrpc/share"
 )
 
 // ErrShutdown connection is closed.

@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/h2san/sanrpc/codec"
+	"github.com/hillguo/sanrpc/codec"
 
-	"github.com/h2san/sanrpc/util"
+	"github.com/hillguo/sanrpc/util"
 )
 
 var (

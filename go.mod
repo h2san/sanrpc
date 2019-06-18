@@ -1,4 +1,4 @@
-module github.com/h2san/sanrpc
+module github.com/hillguo/sanrpc
 
 go 1.12
 
