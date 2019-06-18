@@ -6,11 +6,12 @@ import (
 	"github.com/hillguo/sanrpc/tool/gencode"
 )
 
-var formatPart1 = `package %s
+var formatPart1 = `package client
 
 import (
 	"context"
 	"github.com/hillguo/sanrpc/client"
+	pb "%s/%spb"
 )
 
 type %sClient struct {
@@ -24,13 +25,13 @@ func New%sClient() *%sClient {
 `
 
 var formatFunc = `
-func (c *%sClient) %s(ctx *context.Context, req *%s, resp *%s) error {
+func (c *%sClient) %s(ctx *context.Context, req *pb.%s, resp *pb.%s) error {
 	return c.Call(ctx, "%s", "%s", req, resp)
 }
 `
 
 func genClient(protoInfo *gencode.ProtoFileInfo) (string, string) {
-	data := fmt.Sprintf(formatPart1, protoInfo.PackageName, protoInfo.ServiceName, protoInfo.ServiceName,
+	data := fmt.Sprintf(formatPart1, protoInfo.ServiceName, protoInfo.ServiceName, protoInfo.ServiceName, protoInfo.ServiceName,
 		protoInfo.ServiceName, protoInfo.ServiceName)
 
 	for _, methodInfo := range protoInfo.Methods {

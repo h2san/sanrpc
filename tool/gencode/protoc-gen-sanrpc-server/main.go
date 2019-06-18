@@ -6,7 +6,7 @@ import (
 	"github.com/hillguo/sanrpc/tool/gencode"
 )
 
-var formatServerPart1 = `package %s
+var formatServerPart1 = `package main
 
 import (
 	"context"
@@ -29,7 +29,7 @@ func main() {
 `
 
 func genServer(protoInfo *gencode.ProtoFileInfo) (string, string) {
-	data := fmt.Sprintf(formatServerPart1, protoInfo.PackageName, protoInfo.ModuleName)
+	data := fmt.Sprintf(formatServerPart1, protoInfo.ModuleName)
 	for _, methodInfo := range protoInfo.Methods {
 		data += fmt.Sprintf(formatServerFunc, methodInfo.MethodName, methodInfo.InputType, methodInfo.OutputType)
 	}
