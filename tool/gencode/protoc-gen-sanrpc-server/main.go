@@ -11,6 +11,8 @@ var formatServerPart1 = `package main
 import (
 	"context"
 	"github.com/hillguo/sanrpc/server"
+	
+	pb "%s/proto"
 )
 
 type %sImpl struct {
@@ -18,23 +20,17 @@ type %sImpl struct {
 }
 `
 var formatServerFunc = `
-func (impl *%sImpl)(ctx *context.Context, req *%s, resp *%s) error {
+func (impl *%sImpl) %s (ctx *context.Context, req *pb.%s, resp *pb.%s) error {
 	panic("unimplemented")
 } 
 `
-var formatServerPart2 = `
-func main() {
-	
-}
-`
 
 func genServer(protoInfo *gencode.ProtoFileInfo) (string, string) {
-	data := fmt.Sprintf(formatServerPart1, protoInfo.ModuleName)
+	data := fmt.Sprintf(formatServerPart1, protoInfo.PackageName, protoInfo.ServiceName)
 	for _, methodInfo := range protoInfo.Methods {
-		data += fmt.Sprintf(formatServerFunc, methodInfo.MethodName, methodInfo.InputType, methodInfo.OutputType)
+		data += fmt.Sprintf(formatServerFunc, protoInfo.ServiceName, methodInfo.MethodName, methodInfo.InputType, methodInfo.OutputType)
 	}
-	data += formatServerPart2
-	return protoInfo.ModuleName + "server.go", data
+	return protoInfo.ModuleName + "serviceimpl.go", data
 }
 
 func main() {
