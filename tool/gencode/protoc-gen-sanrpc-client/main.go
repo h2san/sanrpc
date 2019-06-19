@@ -11,7 +11,7 @@ var formatPart1 = `package client
 import (
 	"context"
 	"github.com/hillguo/sanrpc/client"
-	pb "%s/%spb"
+	pb "%s/pb"
 )
 
 type %sClient struct {
@@ -31,7 +31,7 @@ func (c *%sClient) %s(ctx *context.Context, req *pb.%s, resp *pb.%s) error {
 `
 
 func genClient(protoInfo *gencode.ProtoFileInfo) (string, string) {
-	data := fmt.Sprintf(formatPart1, protoInfo.ServiceName, protoInfo.ServiceName, protoInfo.ServiceName, protoInfo.ServiceName,
+	data := fmt.Sprintf(formatPart1, protoInfo.ModuleName, protoInfo.ServiceName, protoInfo.ServiceName,
 		protoInfo.ServiceName, protoInfo.ServiceName)
 
 	for _, methodInfo := range protoInfo.Methods {

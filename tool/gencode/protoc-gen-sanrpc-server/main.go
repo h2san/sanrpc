@@ -26,7 +26,7 @@ func (impl *%sImpl) %s (ctx *context.Context, req *pb.%s, resp *pb.%s) error {
 `
 
 func genServer(protoInfo *gencode.ProtoFileInfo) (string, string) {
-	data := fmt.Sprintf(formatServerPart1, protoInfo.PackageName, protoInfo.ServiceName)
+	data := fmt.Sprintf(formatServerPart1, protoInfo.ModuleName, protoInfo.ServiceName)
 	for _, methodInfo := range protoInfo.Methods {
 		data += fmt.Sprintf(formatServerFunc, protoInfo.ServiceName, methodInfo.MethodName, methodInfo.InputType, methodInfo.OutputType)
 	}
