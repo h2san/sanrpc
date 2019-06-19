@@ -131,7 +131,7 @@ func (p *BaseService) register(rcvr interface{}, name string, useName bool) (str
 		log.Error(errorStr)
 		return sname, errors.New(errorStr)
 	}
-	service.name = sname
+	service.name = strings.ToLower(sname)
 
 	// Install the methods
 	service.method = suitableMethods(service.typ, true)
@@ -243,7 +243,7 @@ func suitableMethods(typ reflect.Type, reportErr bool) map[string]*methodType {
 	for m := 0; m < typ.NumMethod(); m++ {
 		method := typ.Method(m)
 		mtype := method.Type
-		mname := method.Name
+		mname := strings.ToLower(method.Name)
 		// Method must be exported.
 		if method.PkgPath != "" {
 			continue

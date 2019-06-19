@@ -20,7 +20,6 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.8.5 // indirect
-	github.com/hashicorp/golang-lru v0.5.1
 	github.com/hillguo/sanlog v0.0.0-20190529134016-ed34161fd285
 	github.com/jonboulle/clockwork v0.1.0 // indirect
 	github.com/juju/ratelimit v1.0.1

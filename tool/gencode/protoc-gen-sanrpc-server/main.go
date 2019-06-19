@@ -15,12 +15,12 @@ import (
 	pb "%s/proto"
 )
 
-type %sImpl struct {
+type %s struct {
 
 }
 `
 var formatServerFunc = `
-func (impl *%sImpl) %s (ctx *context.Context, req *pb.%s, resp *pb.%s) error {
+func (impl *%s) %s (ctx *context.Context, req *pb.%s, resp *pb.%s) error {
 	panic("unimplemented")
 } 
 `
