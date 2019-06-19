@@ -3,6 +3,7 @@ package sanrpc
 import (
 	"context"
 	"fmt"
+	"strings"
 	"github.com/hillguo/sanrpc/codec"
 	"github.com/hillguo/sanrpc/protocol"
 	"github.com/pkg/errors"
@@ -36,8 +37,8 @@ func(p *Protocol)HandleMessage(ctx context.Context, r protocol.Message) (resp pr
 	if !ok{
 		return nil,errors.New("protocol msg not match")
 	}
-	serviceName := req.ServicePath
-	methodName := req.ServiceMethod
+	serviceName := strings.ToLower(req.ServicePath)
+	methodName := strings.ToLower(req.ServiceMethod)
 
 	res := req.Clone()
 
