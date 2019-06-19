@@ -387,14 +387,15 @@ func (s *Server) serveConn(conn net.Conn) {
 								}
 								buf = buf[:ss]
 								log.Errorf("serving %s panic error: %s, stack:\n %s", conn.RemoteAddr(), err, buf)
+								cancelCtx()
 							}
 						}()
 						ctx.SetValue("serverr",s)
 						resp, err := s.protocol.HandleMessage(ctx, req)
 						if err != nil {
 							log.Warnf("rpc: failed to handle request: %v", err)
-							out <- resp
 						}
+						out <- resp
 					}()
 				}
 			}
