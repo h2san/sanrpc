@@ -20,7 +20,7 @@ const (
 func (p *HTTProtocol) handle(w http.ResponseWriter, req *http.Request, param httprouter.Params) {
 	serviceName := param.ByName("service")
 	methodName := param.ByName("method")
-	log.Debug("service name: ", serviceName, "method name:", methodName)
+	log.Debug("service:", serviceName, " , ", method:", methodName)
 	if serviceName == "" || methodName == "" {
 		http.NotFound(w, req)
 		return

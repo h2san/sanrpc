@@ -12,7 +12,7 @@ import (
 	"context"
 	"github.com/hillguo/sanrpc/server"
 	
-	pb "%s/proto"
+	"%s/pb"
 )
 
 type %s struct {
@@ -20,8 +20,9 @@ type %s struct {
 }
 `
 var formatServerFunc = `
-func (impl *%s) %s (ctx *context.Context, req *pb.%s, resp *pb.%s) error {
-	panic("unimplemented")
+func (impl *%s) %s (ctx context.Context, req *pb.%s, resp *pb.%s) error {
+	fmt.Println("unimplemented")
+	return nil
 } 
 `
 
