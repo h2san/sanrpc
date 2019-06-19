@@ -42,7 +42,5 @@ func (p *HTTProtocol) routeHander(w http.ResponseWriter, r *http.Request,param h
 func (p *HTTProtocol) RegisterService(service interface{}) error{
 	p.router.GET("/:service/:method", p.routeHander)
 	p.router.POST("/:service/:method",p.routeHander)
-	p.router.GET("/:protocol/:service/:method", p.routeHander)
-	p.router.POST("/:protocol/:service/:method", p.routeHander)
 	return p.BaseService.RegisterService(service)
 }
