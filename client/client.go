@@ -165,7 +165,7 @@ func (client *Client) send(ctx context.Context, call *Call) {
 		*cseq = seq
 	}
 
-	req := sanrpc.Message{}
+	req := sanrpc.NewMessage()
 	req.SetMessageType(sanrpc.Request)
 	req.SetSeq(seq)
 	if call.Reply == nil {
