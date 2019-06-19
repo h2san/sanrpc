@@ -69,6 +69,7 @@ func NewXClient(servicePath string, failMode FailMode, selectMode selector.Selec
 		servers[p.Key] = p.Value
 	}
 	client.servers = servers
+	client.selector = selector.NewSelector(selectMode,servers)
 
 	client.Plugins = &pluginContainer{}
 	ch := client.discovery.WatchService()
