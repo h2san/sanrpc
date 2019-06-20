@@ -5,8 +5,6 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"github.com/hillguo/sanrpc/protocol/httpx"
-	"github.com/hillguo/sanrpc/protocol/sanrpc"
 	"io"
 	"net"
 	"net/http"
@@ -16,6 +14,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/hillguo/sanrpc/protocol/httpx"
+	"github.com/hillguo/sanrpc/protocol/sanrpc"
 
 	"os"
 	"os/signal"
@@ -59,8 +60,8 @@ var (
 
 // Server is sanrpc server that use TCP or UDP.
 type Server struct {
-	network string
-	address string
+	network      string
+	address      string
 	ln           net.Listener
 	readTimeout  time.Duration
 	writeTimeout time.Duration
@@ -76,7 +77,7 @@ type Server struct {
 	// TLSConfig for creating tls tcp connection.
 	tlsConfig *tls.Config
 
-	protocol protocol.MsgProtocol
+	protocol    protocol.MsgProtocol
 	httpHandler protocol.HTTPHandlerProtocol
 
 	Plugins PluginContainerer
@@ -87,8 +88,8 @@ type Server struct {
 // NewRpcServer returns a server.
 func NewRpcServer(options ...OptionFn) *Server {
 	s := &Server{
-		Plugins: &PluginContainer{},
-		protocol:&sanrpc.Protocol{},
+		Plugins:  &PluginContainer{},
+		protocol: &sanrpc.Protocol{},
 	}
 
 	for _, op := range options {
@@ -99,12 +100,12 @@ func NewRpcServer(options ...OptionFn) *Server {
 }
 
 // NewHTTPServer return a http server
-func NewHTTPServer(options ...OptionFn) *Server{
+func NewHTTPServer(options ...OptionFn) *Server {
 	s := &Server{
-		Plugins:&PluginContainer{},
-		httpHandler:&httpx.HTTProtocol{},
+		Plugins:     &PluginContainer{},
+		httpHandler: &httpx.HTTProtocol{},
 	}
-	for _, op := range options{
+	for _, op := range options {
 		op(s)
 	}
 
@@ -169,16 +170,16 @@ func (s *Server) Serve(network, address string) (err error) {
 		log.Errorf("crate listener fail", err)
 		return
 	}
-	if network == "http"{
+	if network == "http" {
 		return s.serverHTTP(ln)
 	}
 	return s.serveListener(ln)
 }
 
-func (s *Server) serverHTTP(ln net.Listener) error{
+func (s *Server) serverHTTP(ln net.Listener) error {
 	s.ln = ln
 	svr := http.Server{
-		Handler:s.httpHandler,
+		Handler: s.httpHandler,
 	}
 	return svr.Serve(ln)
 }
@@ -246,6 +247,8 @@ func (s *Server) serveListener(ln net.Listener) error {
 			continue
 		}
 
+		log.Infof("rpc: receive a client conn, remote addr: %+v", conn.RemoteAddr())
+
 		go s.serveConn(conn)
 	}
 }
@@ -290,6 +293,7 @@ func (s *Server) serveConn(conn net.Conn) {
 			log.Errorf("sanrpc: TLS handshake error from %s: %v", conn.RemoteAddr(), err)
 			return
 		}
+		log.Infof("sanrpc: TLS handshake success")
 	}
 	ctx := context.Background()
 	ctx, cancelCtx := context.WithCancel(ctx)
@@ -340,14 +344,18 @@ func (s *Server) serveConn(conn net.Conn) {
 					} else {
 						log.Errorf("sanrpc: failed to read request: %v", err)
 					}
+					log.Infof("connection: %s read routine context done", conn.RemoteAddr().String())
 					return
 				}
+
+				log.Infof("read a message from conn %v", conn.RemoteAddr())
+
 				select {
 				case <-ctx.Done():
-					log.Infof("connection: %s read routine context done %v", conn.RemoteAddr().String(),ctx.Err())
+					log.Infof("connection: %s read routine context done %v", conn.RemoteAddr().String(), ctx.Err())
 					return
 				case in <- req:
-					log.Infof("read a message from %v", conn.RemoteAddr())
+					log.Infof("put message into in queue")
 				}
 			}
 		}(connctx, in)
@@ -373,7 +381,7 @@ func (s *Server) serveConn(conn net.Conn) {
 			for {
 				select {
 				case <-ctx.Done():
-					log.Infof("connection: %s handle routine context done %v", conn.RemoteAddr().String(),ctx.Err())
+					log.Infof("connection: %s handle routine context done %v", conn.RemoteAddr().String(), ctx.Err())
 					return
 				case req := <-in:
 					go func() {
@@ -390,12 +398,14 @@ func (s *Server) serveConn(conn net.Conn) {
 								cancelCtx()
 							}
 						}()
-						ctx.SetValue("serverr",s)
+						log.Infof("get a message from in queue to handler")
+						ctx.SetValue("serverr", s)
 						resp, err := s.protocol.HandleMessage(ctx, req)
 						if err != nil {
 							log.Warnf("rpc: failed to handle request: %v", err)
 						}
 						out <- resp
+						log.Infof("handler message over, put it to out queue")
 					}()
 				}
 			}
@@ -420,14 +430,20 @@ func (s *Server) serveConn(conn net.Conn) {
 				cancelCtx()
 			}()
 
-			for{
+			for {
 				select {
-				case <- ctx.Done():
-					log.Infof("connection: %s write routine context done %v", conn.RemoteAddr().String(),ctx.Err())
+				case <-ctx.Done():
+					log.Infof("connection: %s write routine context done %v", conn.RemoteAddr().String(), ctx.Err())
 					return
-				case resp := <- out:
+				case resp := <-out:
+					log.Infof("read a resp message form out queue")
 					data := s.protocol.EncodeMessage(resp)
-					conn.Write(data)
+					log.Infof("rpc: encode resp , writr into conn")
+					_, err := conn.Write(data)
+					if err != nil {
+						log.Infof("connection: %s write routine context done %v", conn.RemoteAddr().String(), err)
+						return
+					}
 				}
 			}
 		}(connctx, out)
@@ -446,8 +462,6 @@ func closeChannel(s *Server, conn net.Conn) {
 	s.mu.Unlock()
 	conn.Close()
 }
-
-
 
 func (s *Server) auth(ctx context.Context, req *protocol.MsgProtocol) error {
 

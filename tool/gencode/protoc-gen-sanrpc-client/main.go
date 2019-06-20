@@ -14,7 +14,6 @@ import (
 	"github.com/hillguo/sanrpc/client/selector"
 	"github.com/hillguo/sanrpc/client/servicediscovery"
 	 xclient "github.com/hillguo/sanrpc/client"
-	"github.com/hillguo/sanrpc/client"
 	pb "%s/pb"
 )
 
@@ -35,14 +34,14 @@ func New%sClient() *%sClient {
 `
 
 var formatFunc = `
-func (c *%sClient) %s(ctx *context.Context, req *pb.%s, resp *pb.%s) error {
+func (c *%sClient) %s(ctx context.Context, req *pb.%s, resp *pb.%s) error {
 	return c.Call(ctx,  "%s", req, resp)
 }
 `
 
 func genClient(protoInfo *gencode.ProtoFileInfo) (string, string) {
 	data := fmt.Sprintf(formatPart1, protoInfo.ModuleName, protoInfo.ServiceName, protoInfo.ServiceName,
-		protoInfo.ServiceName, protoInfo.ServiceName, protoInfo.ServiceName)
+		protoInfo.ServiceName, protoInfo.ServiceName)
 
 	for _, methodInfo := range protoInfo.Methods {
 		data += fmt.Sprintf(formatFunc, protoInfo.ServiceName, methodInfo.MethodName,

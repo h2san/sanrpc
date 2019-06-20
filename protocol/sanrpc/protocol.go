@@ -3,19 +3,21 @@ package sanrpc
 import (
 	"context"
 	"fmt"
-	"strings"
-	"github.com/hillguo/sanrpc/codec"
-	"github.com/hillguo/sanrpc/protocol"
-	"github.com/pkg/errors"
 	"io"
 	"reflect"
+	"strings"
+
+	"github.com/hillguo/sanrpc/codec"
+	"github.com/hillguo/sanrpc/log"
+	"github.com/hillguo/sanrpc/protocol"
+	"github.com/pkg/errors"
 )
 
 type Protocol struct {
 	protocol.BaseService
 }
 
-func(p *Protocol)DecodeMessage(r io.Reader) (protocol.Message,error){
+func (p *Protocol) DecodeMessage(r io.Reader) (protocol.Message, error) {
 	msg := NewMessage()
 	err := msg.Decode(r)
 	if err != nil {
@@ -24,18 +26,19 @@ func(p *Protocol)DecodeMessage(r io.Reader) (protocol.Message,error){
 	return msg, nil
 }
 
-func(p *Protocol)EncodeMessage(msg protocol.Message)[]byte{
-	m,ok:=msg.(Message)
-	if !ok{
+func (p *Protocol) EncodeMessage(msg protocol.Message) []byte {
+	m, ok := msg.(*Message)
+	if !ok {
+		log.Errorf("rpc: encoding msg error %+v", msg)
 		return []byte{}
 	}
 	return m.Encode()
 }
 
-func(p *Protocol)HandleMessage(ctx context.Context, r protocol.Message) (resp protocol.Message, err error) {
-	req,ok := r.(*Message)
-	if !ok{
-		return nil,errors.New("protocol msg not match")
+func (p *Protocol) HandleMessage(ctx context.Context, r protocol.Message) (resp protocol.Message, err error) {
+	req, ok := r.(*Message)
+	if !ok {
+		return nil, errors.New("protocol msg not match")
 	}
 	serviceName := strings.ToLower(req.ServicePath)
 	methodName := strings.ToLower(req.ServiceMethod)
@@ -61,7 +64,7 @@ func(p *Protocol)HandleMessage(ctx context.Context, r protocol.Message) (resp pr
 		return handleError(res, err)
 	}
 
-	argv :=reflect.New(mtype.ArgType.Elem()).Interface()
+	argv := reflect.New(mtype.ArgType.Elem()).Interface()
 	cc := codec.Codecs[req.SerializeType()]
 	if cc == nil {
 		err = fmt.Errorf("can not find codec for %d", req.SerializeType())
@@ -72,7 +75,7 @@ func(p *Protocol)HandleMessage(ctx context.Context, r protocol.Message) (resp pr
 		return handleError(res, err)
 	}
 
-	replyv :=reflect.New(mtype.ReplyType.Elem()).Interface()
+	replyv := reflect.New(mtype.ReplyType.Elem()).Interface()
 
 	if mtype.ArgType.Kind() != reflect.Ptr {
 		err = service.Call(ctx, mtype, reflect.ValueOf(argv).Elem(), reflect.ValueOf(replyv))
@@ -111,7 +114,7 @@ func (p *Protocol) handleRequestForFunction(ctx context.Context, req *Message) (
 		return handleError(res, err)
 	}
 
-	argv :=reflect.New(mtype.ArgType).Interface()
+	argv := reflect.New(mtype.ArgType).Interface()
 
 	cc := codec.Codecs[req.SerializeType()]
 	if cc == nil {
@@ -124,7 +127,7 @@ func (p *Protocol) handleRequestForFunction(ctx context.Context, req *Message) (
 		return handleError(res, err)
 	}
 
-	replyv :=reflect.New(mtype.ReplyType.Elem()).Interface()
+	replyv := reflect.New(mtype.ReplyType.Elem()).Interface()
 
 	err = service.CallForFunction(ctx, mtype, reflect.ValueOf(argv), reflect.ValueOf(replyv))
 
