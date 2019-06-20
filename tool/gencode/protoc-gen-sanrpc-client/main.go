@@ -45,8 +45,8 @@ func genClient(protoInfo *gencode.ProtoFileInfo) (string, string) {
 		protoInfo.ServiceName, protoInfo.ServiceName, protoInfo.ServiceName)
 
 	for _, methodInfo := range protoInfo.Methods {
-		data += fmt.Sprintf(formatFunc,  methodInfo.MethodName,
-			methodInfo.InputType, methodInfo.OutputType, protoInfo.ServiceName, methodInfo.MethodName)
+		data += fmt.Sprintf(formatFunc, protoInfo.ServiceName, methodInfo.MethodName,
+			methodInfo.InputType, methodInfo.OutputType, methodInfo.MethodName)
 	}
 	return protoInfo.ModuleName + "client.go", data
 }
