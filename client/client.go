@@ -44,14 +44,11 @@ type Client struct {
 	Conn   net.Conn
 	r      *bufio.Reader
 
-	mutex        sync.Mutex
-	seq          uint64
-	pending      map[uint64]*Call
-	closing      bool
-	shutdown     bool
-	pluginClosed bool
-
-	Plugins PluginContainer
+	mutex    sync.Mutex
+	seq      uint64
+	pending  map[uint64]*Call
+	closing  bool
+	shutdown bool
 }
 
 func NewClient(option Option) *Client {
@@ -193,9 +190,6 @@ func (client *Client) send(ctx context.Context, call *Call) {
 		req.Payload = data
 	}
 
-	if client.Plugins != nil {
-		client.Plugins.DoClientBeforeEncode(req)
-	}
 	data := req.Encode()
 
 	if client.option.WriteTimeout != 0 {
@@ -246,9 +240,6 @@ func (client *Client) input() {
 		err = res.Decode(client.r)
 		if err != nil {
 			break
-		}
-		if client.Plugins != nil {
-			client.Plugins.DoClientAfterDecode(res)
 		}
 
 		seq := res.Seq()
@@ -301,12 +292,6 @@ func (client *Client) input() {
 	}
 
 	client.mutex.Lock()
-	if !client.pluginClosed {
-		if client.Plugins != nil {
-			client.Plugins.DoClientConnectionClose(client.Conn)
-		}
-		client.pluginClosed = true
-	}
 	_ = client.Conn.Close()
 	client.shutdown = true
 	closing := client.closing
@@ -355,19 +340,12 @@ func (client *Client) Close() error {
 	}
 
 	var err error
-	if !client.pluginClosed {
-		if client.Plugins != nil {
-			client.Plugins.DoClientConnectionClose(client.Conn)
-		}
-
-		client.pluginClosed = true
-		err = client.Conn.Close()
-	}
 
 	if client.closing || client.shutdown {
 		client.mutex.Unlock()
 		return ErrShutdown
 	}
+	err = client.Conn.Close()
 
 	client.closing = true
 	client.mutex.Unlock()

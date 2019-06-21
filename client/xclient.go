@@ -40,7 +40,6 @@ type xClient struct {
 	selector   selector.Selector
 	isShutdown bool
 	auth       string
-	Plugins    PluginContainer
 	ch         chan []*servicediscovery.KVPair
 }
 
@@ -69,9 +68,8 @@ func NewXClient(servicePath string, failMode FailMode, selectMode selector.Selec
 		servers[p.Key] = p.Value
 	}
 	client.servers = servers
-	client.selector = selector.NewSelector(selectMode,servers)
+	client.selector = selector.NewSelector(selectMode, servers)
 
-	client.Plugins = &pluginContainer{}
 	ch := client.discovery.WatchService()
 	if ch != nil {
 		client.ch = ch
@@ -102,15 +100,6 @@ func (c *xClient) SetSelector(s selector.Selector) {
 	c.mu.RUnlock()
 
 	c.selector = s
-}
-
-// SetPlugins sets client's plugins.
-func (c *xClient) SetPlugins(plugins PluginContainer) {
-	c.Plugins = plugins
-}
-
-func (c *xClient) GetPlugins() PluginContainer {
-	return c.Plugins
 }
 
 // Auth sets s token for Authentication.
@@ -144,8 +133,7 @@ func (c *xClient) getCachedClient(k string) (RPCClient, error) {
 	if client == nil || client.IsShutdown() {
 		network, addr := splitNetworkAndAddress(k)
 		client = &Client{
-			option:  c.option,
-			Plugins: c.Plugins,
+			option: c.option,
 		}
 		err := client.Connect(network, addr)
 		if err != nil {
