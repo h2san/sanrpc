@@ -17,7 +17,7 @@ const (
 	HTTPRequestKey = "Context_HTTPRequestKey"
 )
 
-func (p *HTTProtocol) handle(w http.ResponseWriter, req *http.Request, param httprouter.Params) {
+func (p *HTTProtocol) handle(ctx context.Context, w http.ResponseWriter, req *http.Request, param httprouter.Params) {
 	serviceName := param.ByName("service")
 	methodName := param.ByName("method")
 	log.Debug("service:", serviceName, " , ", "method:", methodName)
@@ -41,8 +41,6 @@ func (p *HTTProtocol) handle(w http.ResponseWriter, req *http.Request, param htt
 
 	argv := reflect.New(mtype.ArgType.Elem()).Interface()
 	replyv := reflect.New(mtype.ReplyType.Elem()).Interface()
-
-	ctx := context.Background()
 
 	switch param.ByName("protocol") {
 	case "ws":
@@ -70,8 +68,7 @@ func (p *HTTProtocol) handle(w http.ResponseWriter, req *http.Request, param htt
 			writeErrResponse(w, HTTPX_REQ_UNMARSHAL_ERR, err.Error())
 			return
 		}
-		ctx = context.WithValue(ctx,HTTPRequestKey,req)
-		w.Header().Set("Content-Type","application/json")
+		ctx = context.WithValue(ctx, HTTPRequestKey, req)
 	}
 
 	var err error
@@ -82,18 +79,10 @@ func (p *HTTProtocol) handle(w http.ResponseWriter, req *http.Request, param htt
 	}
 
 	if err != nil {
-		if _, ok := err.(error302); ok {
-			return
-		}
-		if _, ok := err.(error404); ok {
-			return
-		}
 		writeErrResponse(w, HTTP_REQ_HANDLE_ERR, err.Error())
 		return
 	}
 
-	if w.Header().Get("Content-Type") == "application/json"{
-		writeResponse(w,0,"success", replyv)
-	}
+	writeResponse(w, 0, "success", replyv)
 
 }

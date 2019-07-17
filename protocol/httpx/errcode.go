@@ -7,19 +7,5 @@ const (
 
 	// pre handler http errro
 	HTTP_PRE_HANDLER_ERR  = 1000004
-	HTTP_POST_HANDLER_ERR = 1000004
+	HTTP_POST_HANDLER_ERR = 1000005
 )
-
-type error302 struct {
-}
-
-type error404 struct {
-}
-
-func (e error302) Error() string {
-	return "302"
-}
-
-func (e error404) Error() string {
-	return "404"
-}

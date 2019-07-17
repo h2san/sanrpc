@@ -1,20 +1,20 @@
 package httpx
 
 import (
+	"context"
 	"net/http"
 )
-import "github.com/julienschmidt/httprouter"
 
 type Plugin interface {
 }
 
 type (
 	PreHandleHTTPRequestPlugin interface {
-		PreHandleHTTPRequest(w http.ResponseWriter, req *http.Request, param httprouter.Params) error
+		PreHandleHTTPRequest(ctx context.Context, req *http.Request) error
 	}
 
 	PostHandleHTTPRequestPlugin interface {
-		PostHandleHTTPRequest(w http.ResponseWriter, req *http.Request, param httprouter.Params) error
+		PostHandleHTTPRequest(ctx context.Context)
 	}
 )
 
@@ -22,10 +22,10 @@ type httpxPlugin struct {
 	plugins []Plugin
 }
 
-func (p *httpxPlugin) DoPreHandleHTTPRequest(w http.ResponseWriter, req *http.Request, param httprouter.Params) error {
+func (p *httpxPlugin) DoPreHandleHTTPRequest(ctx context.Context, req *http.Request) error {
 	for i := range p.plugins {
 		if plugin, ok := p.plugins[i].(PreHandleHTTPRequestPlugin); ok {
-			err := plugin.PreHandleHTTPRequest(w, req, param)
+			err := plugin.PreHandleHTTPRequest(ctx, req)
 			if err != nil {
 				return err
 			}
@@ -34,16 +34,12 @@ func (p *httpxPlugin) DoPreHandleHTTPRequest(w http.ResponseWriter, req *http.Re
 	return nil
 }
 
-func (p *httpxPlugin) DoPostHandleHTTPRequest(w http.ResponseWriter, req *http.Request, param httprouter.Params) error {
+func (p *httpxPlugin) DoPostHandleHTTPRequest(ctx context.Context) {
 	for i := range p.plugins {
 		if plugin, ok := p.plugins[i].(PostHandleHTTPRequestPlugin); ok {
-			err := plugin.PostHandleHTTPRequest(w, req, param)
-			if err != nil {
-				return err
-			}
+			plugin.PostHandleHTTPRequest(ctx)
 		}
 	}
-	return nil
 }
 
 // Add adds a plugin.
