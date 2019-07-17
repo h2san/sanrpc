@@ -13,11 +13,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-type Protocol struct {
+type SanRPCProtocol struct {
 	protocol.BaseService
 }
 
-func (p *Protocol) DecodeMessage(r io.Reader) (protocol.Message, error) {
+func (p *SanRPCProtocol) DecodeMessage(r io.Reader) (protocol.Message, error) {
 	msg := NewMessage()
 	err := msg.Decode(r)
 	if err != nil {
@@ -26,7 +26,7 @@ func (p *Protocol) DecodeMessage(r io.Reader) (protocol.Message, error) {
 	return msg, nil
 }
 
-func (p *Protocol) EncodeMessage(msg protocol.Message) []byte {
+func (p *SanRPCProtocol) EncodeMessage(msg protocol.Message) []byte {
 	m, ok := msg.(*Message)
 	if !ok {
 		log.Errorf("rpc: encoding msg error %+v", msg)
@@ -35,7 +35,7 @@ func (p *Protocol) EncodeMessage(msg protocol.Message) []byte {
 	return m.Encode()
 }
 
-func (p *Protocol) HandleMessage(ctx context.Context, r protocol.Message) (resp protocol.Message, err error) {
+func (p *SanRPCProtocol) HandleMessage(ctx context.Context, r protocol.Message) (resp protocol.Message, err error) {
 	req, ok := r.(*Message)
 	if !ok {
 		return nil, errors.New("protocol msg not match")
@@ -95,7 +95,7 @@ func (p *Protocol) HandleMessage(ctx context.Context, r protocol.Message) (resp 
 	}
 	return res, nil
 }
-func (p *Protocol) handleRequestForFunction(ctx context.Context, req *Message) (resp protocol.Message, err error) {
+func (p *SanRPCProtocol) handleRequestForFunction(ctx context.Context, req *Message) (resp protocol.Message, err error) {
 	res := req.Clone()
 	res.SetMessageType(Response)
 

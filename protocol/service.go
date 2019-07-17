@@ -14,14 +14,12 @@ import (
 	"github.com/hillguo/sanrpc/log"
 )
 
-
 // Precompute the reflect type for error. Can't use error directly
 // because Typeof takes an empty interface value. This is annoying.
 var typeOfError = reflect.TypeOf((*error)(nil)).Elem()
 
 // Precompute the reflect type for context.
 var typeOfContext = reflect.TypeOf((*context.Context)(nil)).Elem()
-
 
 type BaseService struct {
 	ServiceMapMu sync.RWMutex
@@ -51,11 +49,11 @@ type service struct {
 	function map[string]*functionType // registered functions
 }
 
-func (s *service) GetMethod(methodName string)*methodType{
+func (s *service) GetMethod(methodName string) *methodType {
 	return s.method[methodName]
 }
 
-func (s *service) GetFunction(functionName string)*functionType{
+func (s *service) GetFunction(functionName string) *functionType {
 	return s.function[functionName]
 }
 
@@ -73,7 +71,7 @@ func isExportedOrBuiltinType(t reflect.Type) bool {
 	return isExported(t.Name()) || t.PkgPath() == ""
 }
 
-func (p*BaseService) RegisterService(rcvr interface{}) error {
+func (p *BaseService) RegisterService(rcvr interface{}) error {
 	_, err := p.register(rcvr, "", false)
 	return err
 }
@@ -151,9 +149,9 @@ func (p *BaseService) register(rcvr interface{}, name string, useName bool) (str
 	}
 	p.ServiceMap[service.name] = service
 
-	log.Infof("register service: %v success ",service.name)
-	for key,_:= range service.method{
-		log.Infof("register method: %v success ",key)
+	log.Infof("register service: %v success ", service.name)
+	for key, _ := range service.method {
+		log.Infof("register method: %v success ", key)
 	}
 
 	return sname, nil
@@ -305,7 +303,6 @@ func suitableMethods(typ reflect.Type, reportErr bool) map[string]*methodType {
 	}
 	return methods
 }
-
 
 func (s *service) Call(ctx context.Context, mtype *methodType, argv, replyv reflect.Value) (err error) {
 	defer func() {

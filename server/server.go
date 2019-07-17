@@ -89,7 +89,7 @@ type Server struct {
 func NewRpcServer(options ...OptionFn) *Server {
 	s := &Server{
 		Plugins:  &PluginContainer{},
-		protocol: &sanrpc.Protocol{},
+		protocol: &sanrpc.SanRPCProtocol{},
 	}
 
 	for _, op := range options {
@@ -189,7 +189,7 @@ func (s *Server) serverHTTP(ln net.Listener) error {
 // The service goroutines read requests and then call services to reply to them.
 func (s *Server) serveListener(ln net.Listener) error {
 	if s.protocol == nil {
-		s.protocol = &sanrpc.Protocol{}
+		s.protocol = &sanrpc.SanRPCProtocol{}
 	}
 	if s.Plugins == nil {
 		s.Plugins = &PluginContainer{}
