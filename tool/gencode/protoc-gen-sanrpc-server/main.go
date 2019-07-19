@@ -10,7 +10,7 @@ var formatServerPart1 = `package main
 
 import (
 	"context"
-	"github.com/hillguo/sanrpc/server"
+	"fmt"
 	
 	"%s/pb"
 )
