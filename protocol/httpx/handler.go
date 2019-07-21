@@ -41,8 +41,8 @@ func (p *HTTProtocol) handle(ctx context.Context, w http.ResponseWriter, req *ht
 		return
 	}
 
-	argv := reflect.New(mtype.ArgType.Elem())
-	replyv := reflect.New(mtype.ReplyType.Elem())
+	argv := reflect.New(mtype.ArgType.Elem()).Interface()
+	replyv := reflect.New(mtype.ReplyType.Elem()).Interface()
 
 	switch param.ByName("protocol") {
 	case "ws":
