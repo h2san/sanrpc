@@ -30,14 +30,14 @@ func (p *HTTProtocol) handle(ctx context.Context, w http.ResponseWriter, req *ht
 	service := p.ServiceMap[serviceName]
 
 	if service == nil {
-		log.Warn(req.URL, "not found service")
+		log.Warn("req url: ", req.URL, " not found service")
 		http.NotFound(w, req)
 		return
 	}
 	mtype := service.GetMethod(methodName)
 	if mtype == nil {
 		http.NotFound(w, req)
-		log.Warn(req.URL, "not found methodName")
+		log.Warn("req url: ", req.URL, "not found methodName")
 		return
 	}
 
@@ -70,7 +70,7 @@ func (p *HTTProtocol) handle(ctx context.Context, w http.ResponseWriter, req *ht
 		err = json.Unmarshal(data, argv)
 		if err != nil {
 			writeErrResponse(w, HTTPX_REQ_UNMARSHAL_ERR, err.Error())
-			log.Error("json Unmarshal error:", data, err)
+			log.Error("json Unmarshal error:", string(data), err)
 			return
 		}
 		ctx = context.WithValue(ctx, HTTPRequestKey, req)
