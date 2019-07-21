@@ -6,6 +6,7 @@ import (
 	"github.com/hillguo/sanrpc/protocol"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
+	"fmt"
 )
 
 //HTTProtocol 路由实现
@@ -23,6 +24,7 @@ func (p *HTTProtocol) AddPlugin(plugin interface{}) {
 func (p *HTTProtocol) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	p.router.GET("/:service/:method", p.routeHander)
 	p.router.POST("/:service/:method", p.routeHander)
+	fmt.Print(r)
 	p.router.ServeHTTP(w, r)
 }
 
