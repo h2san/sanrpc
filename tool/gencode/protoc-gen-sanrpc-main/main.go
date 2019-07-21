@@ -15,7 +15,8 @@ import (
 func main() {
 	s := server.NewRpcServer()
 	s.RegisterService(&%s{})
-	s.Serve("http", "0.0.0.0:8080")
+	// s.Serve("http", "0.0.0.0:8080")
+	s.Serve("tcp", "0.0.0.0:8080")
 }
 `
 

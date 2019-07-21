@@ -11,7 +11,6 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/docker/libkv v0.2.1
 	github.com/edwingeng/doublejump v0.0.0-20190102103700-461a0155c7be
-	github.com/fatih/color v1.7.0
 	github.com/gogo/protobuf v1.2.1
 	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef // indirect
 	github.com/golang/protobuf v1.3.1
@@ -20,12 +19,10 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.8.5 // indirect
-	github.com/hillguo/sanlog v0.0.0-20190529134016-ed34161fd285
+	github.com/hillguo/sanlog v0.0.0-20190721072053-0a28474fe73e
 	github.com/jonboulle/clockwork v0.1.0 // indirect
 	github.com/juju/ratelimit v1.0.1
 	github.com/julienschmidt/httprouter v1.2.0
-	github.com/mattn/go-colorable v0.1.1 // indirect
-	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v0.9.2 // indirect
 	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90 // indirect
