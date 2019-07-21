@@ -3,7 +3,7 @@ package httpx
 import (
 	"context"
 	"encoding/json"
-	"github.com/h2san/sanrpc/log"
+	log "github.com/hillguo/sanlog"
 	"io/ioutil"
 	"net/http"
 	"reflect"
