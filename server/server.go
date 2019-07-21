@@ -22,7 +22,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/hillguo/sanrpc/log"
+	log "github.com/hillguo/sanlog"
 	"github.com/hillguo/sanrpc/protocol"
 	"github.com/hillguo/sanrpc/share"
 )

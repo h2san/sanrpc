@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/hillguo/sanrpc/log"
+	log "github.com/hillguo/sanlog"
 	"github.com/hillguo/sanrpc/share"
 )
 

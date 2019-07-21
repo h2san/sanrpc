@@ -11,7 +11,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/hillguo/sanrpc/log"
+	log "github.com/hillguo/sanlog"
 )
 
 // Precompute the reflect type for error. Can't use error directly
@@ -310,7 +310,7 @@ func (s *service) Call(ctx context.Context, mtype *methodType, argv, replyv refl
 			//log.Errorf("failed to invoke service: %v, stacks: %s", r, string(debug.Stack()))
 			err = fmt.Errorf("[service internal error]: %v, method: %s, argv: %+v",
 				r, mtype.method.Name, argv.Interface())
-			log.Handle(err)
+			log.Error(err)
 		}
 	}()
 
@@ -332,7 +332,7 @@ func (s *service) CallForFunction(ctx context.Context, ft *functionType, argv, r
 			//log.Errorf("failed to invoke service: %v, stacks: %s", r, string(debug.Stack()))
 			err = fmt.Errorf("[service internal error]: %v, function: %s, argv: %+v",
 				r, runtime.FuncForPC(ft.fn.Pointer()), argv.Interface())
-			log.Handle(err)
+			log.Error(err)
 		}
 	}()
 

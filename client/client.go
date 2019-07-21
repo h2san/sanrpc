@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
+	log "github.com/hillguo/sanlog"
 	"github.com/hillguo/sanrpc/codec"
-	"github.com/hillguo/sanrpc/log"
 	"github.com/hillguo/sanrpc/protocol/sanrpc"
 	"github.com/hillguo/sanrpc/share"
 )

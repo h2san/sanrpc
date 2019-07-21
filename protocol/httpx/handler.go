@@ -8,7 +8,7 @@ import (
 	"reflect"
 
 	"github.com/gorilla/websocket"
-	"github.com/hillguo/sanrpc/log"
+	log "github.com/hillguo/sanlog"
 	"github.com/julienschmidt/httprouter"
 )
 
