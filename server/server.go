@@ -103,8 +103,9 @@ func NewRpcServer(options ...OptionFn) *Server {
 func NewHTTPServer(options ...OptionFn) *Server {
 	s := &Server{
 		Plugins:     &PluginContainer{},
-		httpHandler: &httpx.HTTProtocol{},
+		httpHandler: httpx.DefaultHTTProtocol,
 	}
+
 	for _, op := range options {
 		op(s)
 	}
