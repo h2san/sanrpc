@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package sanrpc;
+
+enum SanrpcMagic {
+    SANRPC_DEFAULT_MAGIC_VALUE = 0x00;
+    SANRPC_MAGIC_VALUE = 0x4f5da2;
+}
+
+enum SanrpcContentEncodeType {
+    SANRPC_NONE_ENCODE = 0;
+    SANRPC_PB_ENCODE = 1;
+    SANRPC_JSON_ENCODE = 2;
+}
+
+enum SanrpcCompressType {
+    SANRPC_NONE_COMPRESS = 0;
+    SANRPC_GZIP_COMPRESS = 1;
+}
+
+enum SanrpcMsgType {
+    SANRPC_NONE_MSG = 0;
+    SANRPC_REQUEST_MSG = 1;
+    SANRPC_RESPONSE_MSG = 2;
+}
+
+message MsgHeader {
+    uint32 version = 1;
+    uint32 call_type = 2;
+    uint64 seq = 3;
+    uint32 timeout = 4;
+    string service_name = 5;
+    string method_name = 6;
+    SanrpcContentEncodeType encode_type = 7;
+    SanrpcCompressType compress_type = 8;
+    bytes meta_data = 9;
+
+}
+
+message MessageProtocol {
+    MsgHeader header = 1;
+    int32  ret_code = 2;
+    string ret_msg = 3;
+    bytes data = 4;
+}

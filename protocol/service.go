@@ -307,7 +307,6 @@ func suitableMethods(typ reflect.Type, reportErr bool) map[string]*methodType {
 func (s *service) Call(ctx context.Context, mtype *methodType, argv, replyv reflect.Value) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			//log.Errorf("failed to invoke service: %v, stacks: %s", r, string(debug.Stack()))
 			err = fmt.Errorf("[service internal error]: %v, method: %s, argv: %+v",
 				r, mtype.method.Name, argv.Interface())
 			log.Error(err)
@@ -329,7 +328,6 @@ func (s *service) Call(ctx context.Context, mtype *methodType, argv, replyv refl
 func (s *service) CallForFunction(ctx context.Context, ft *functionType, argv, replyv reflect.Value) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			//log.Errorf("failed to invoke service: %v, stacks: %s", r, string(debug.Stack()))
 			err = fmt.Errorf("[service internal error]: %v, function: %s, argv: %+v",
 				r, runtime.FuncForPC(ft.fn.Pointer()), argv.Interface())
 			log.Error(err)
