@@ -13,7 +13,7 @@ type Message interface{}
 type MsgProtocol interface {
 	DecodeMessage(r io.Reader) (Message, error)
 	HandleMessage(ctx context.Context, req Message) (resp Message, err error)
-	EncodeMessage(res Message) []byte
+	EncodeMessage(res Message) ([]byte, error)
 
 	RegisterService(service interface{}) error
 }
