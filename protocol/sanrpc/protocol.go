@@ -2,15 +2,29 @@ package sanrpc
 
 import (
 	"context"
-	"fmt"
+	"encoding/binary"
+	"errors"
+	"github.com/golang/protobuf/proto"
+	log "github.com/hillguo/sanlog"
+	"github.com/hillguo/sanrpc/codec"
+	"github.com/hillguo/sanrpc/errs"
+	"github.com/hillguo/sanrpc/protocol"
 	"io"
 	"reflect"
 	"strings"
+)
 
-	log "github.com/hillguo/sanlog"
-	"github.com/hillguo/sanrpc/codec"
-	"github.com/hillguo/sanrpc/protocol"
-	"github.com/pkg/errors"
+const headLen int = 8 // 4 bytes magic_value + 4 bytes pb length
+
+var (
+	ErrReadMsgHeaderInvalid = errors.New("read msg header num invalid")
+	ErrReadMsgMagicInvalid    = errors.New("read msg header magic invalid")
+	ErrReadMsgBodyInvalid   = errors.New("read msg body num invalid")
+	ErrServerMarshalFail    = errors.New("server marshal response interface invalid")
+	ErrServerUnmarshalFail    = errors.New("server unmarshal request interface invalid")
+	ErrClientMarshalFail    = errors.New("client marshal request interface invalid")
+	ErrClientUnmarshalFail  = errors.New("client unmarshal response interface invalid")
+	ErrMsgAssertInvalid = errors.New("msg assert fail")
 )
 
 type SanRPCProtocol struct {
@@ -18,140 +32,126 @@ type SanRPCProtocol struct {
 }
 
 func (p *SanRPCProtocol) DecodeMessage(r io.Reader) (protocol.Message, error) {
-	msg := NewMessage()
-	err := msg.Decode(r)
+
+	head := make([]byte, headLen)
+	n ,err := io.ReadFull(r,head)
 	if err != nil {
 		return nil, err
 	}
-	return msg, nil
+	if n != headLen {
+		return nil, ErrReadMsgHeaderInvalid
+	}
+	magic := binary.BigEndian.Uint32(head[:4])
+	bodylen := binary.BigEndian.Uint32(head[4:])
+
+	log.Infof("read msg magic:%d, body len:%d", magic, bodylen)
+	if magic != uint32(SanrpcMagic_SANRPC_MAGIC_VALUE) {
+		return nil, ErrReadMsgMagicInvalid
+	}
+	if bodylen == 0 {
+		return nil, ErrReadMsgBodyInvalid
+	}
+	msg := make([]byte, bodylen)
+	n,err = io.ReadFull(r, msg)
+	if  err != nil {
+		return nil, err
+	}
+	if n != int(bodylen) {
+		return nil, ErrReadMsgBodyInvalid
+	}
+	log.Info("read a full sanrpc message")
+
+	msgprotocol := &MessageProtocol{}
+	if err :=proto.Unmarshal(msg, msgprotocol); err != nil {
+		return nil, ErrServerUnmarshalFail
+	}
+	log.Info("unmarshal sanrpc message success")
+	return msgprotocol, nil
 }
 
-func (p *SanRPCProtocol) EncodeMessage(msg protocol.Message) []byte {
-	m, ok := msg.(*Message)
+func (p *SanRPCProtocol) EncodeMessage(msg protocol.Message) ([]byte,error) {
+	m, ok := msg.(*MessageProtocol)
 	if !ok {
 		log.Errorf("rpc: encoding msg error %+v", msg)
-		return []byte{}
+		return nil , ErrMsgAssertInvalid
 	}
-	return m.Encode()
+	data, err := proto.Marshal(m)
+	if err != nil {
+		return nil, ErrServerMarshalFail
+	}
+
+	return data, nil
 }
 
-func (p *SanRPCProtocol) HandleMessage(ctx context.Context, r protocol.Message) (resp protocol.Message, err error) {
-	req, ok := r.(*Message)
-	if !ok {
-		return nil, errors.New("protocol msg not match")
-	}
-	serviceName := strings.ToLower(req.ServicePath)
-	methodName := strings.ToLower(req.ServiceMethod)
-
-	res := req.Clone()
-
-	res.SetMessageType(Response)
+func (p *SanRPCProtocol) DisspatchMessage(req *MessageProtocol, resp *MessageProtocol)  error{
+	serviceName := strings.ToLower(req.Header.ServiceName)
+	methodName := strings.ToLower(req.Header.MethodName)
 
 	p.ServiceMapMu.RLock()
 	service := p.ServiceMap[serviceName]
 	p.ServiceMapMu.RUnlock()
 
 	if service == nil {
-		err = errors.New("sanrpc: can't find service " + serviceName)
-		return handleError(res, err)
+		return errs.ErrServerNoService
 	}
 	mtype := service.GetMethod(methodName)
 	if mtype == nil {
-		if service.GetFunction(methodName) != nil { //check raw functions
-			return p.handleRequestForFunction(ctx, req)
-		}
-		err = errors.New("sanrpc: can't find method " + methodName)
-		return handleError(res, err)
+		return errs.ErrServerNoMethod
 	}
 
 	argv := reflect.New(mtype.ArgType.Elem()).Interface()
-	cc := codec.Codecs[req.SerializeType()]
+	cc := codec.Codecs[codec.SerializeType(req.Header.EncodeType)]
 	if cc == nil {
-		err = fmt.Errorf("can not find codec for %d", req.SerializeType())
-		return handleError(res, err)
+		return errs.ErrServerNoSupportEncodeType
 	}
-	err = cc.Decode(req.Payload, argv)
+	err := cc.Decode(req.Data, argv)
 	if err != nil {
-		return handleError(res, err)
+		return errs.ErrServerDecodeDataErr
 	}
 
 	replyv := reflect.New(mtype.ReplyType.Elem()).Interface()
+
+	ctx:=context.Background()
 
 	if mtype.ArgType.Kind() != reflect.Ptr {
 		err = service.Call(ctx, mtype, reflect.ValueOf(argv).Elem(), reflect.ValueOf(replyv))
 	} else {
 		err = service.Call(ctx, mtype, reflect.ValueOf(argv), reflect.ValueOf(replyv))
 	}
-	if err != nil {
-		return handleError(res, err)
-	}
-	if !req.IsOneway() {
-		data, err := cc.Encode(replyv)
-		if err != nil {
-			return handleError(res, err)
-
-		}
-		res.Payload = data
-	}
-	return res, nil
-}
-func (p *SanRPCProtocol) handleRequestForFunction(ctx context.Context, req *Message) (resp protocol.Message, err error) {
-	res := req.Clone()
-	res.SetMessageType(Response)
-
-	serviceName := req.ServicePath
-	methodName := req.ServiceMethod
-	p.ServiceMapMu.RLock()
-	service := p.ServiceMap[serviceName]
-	p.ServiceMapMu.RUnlock()
-	if service == nil {
-		err = errors.New("sanrpc: can't find service  for func raw function")
-		return handleError(res, err)
-	}
-	mtype := service.GetFunction(methodName)
-	if mtype == nil {
-		err = errors.New("sanrpc: can't find method " + methodName)
-		return handleError(res, err)
-	}
-
-	argv := reflect.New(mtype.ArgType).Interface()
-
-	cc := codec.Codecs[req.SerializeType()]
-	if cc == nil {
-		err = fmt.Errorf("can not find codec for %d", req.SerializeType())
-		return handleError(res, err)
-	}
-
-	err = cc.Decode(req.Payload, argv)
-	if err != nil {
-		return handleError(res, err)
-	}
-
-	replyv := reflect.New(mtype.ReplyType.Elem()).Interface()
-
-	err = service.CallForFunction(ctx, mtype, reflect.ValueOf(argv), reflect.ValueOf(replyv))
 
 	if err != nil {
-
-		return handleError(res, err)
+		return err
 	}
 
-	if !req.IsOneway() {
-		data, err := cc.Encode(replyv)
-		if err != nil {
-			return handleError(res, err)
-
-		}
-		res.Payload = data
+	data, err := cc.Encode(replyv)
+	if err != nil {
+		return errs.ErrServerEncodeDataErr
 	}
-	return res, nil
+	resp.Data = data
+	return nil
 }
 
-func handleError(res *Message, err error) (*Message, error) {
-	res.SetMessageStatusType(Error)
-	if res.Metadata == nil {
-		res.Metadata = make(map[string]string)
+func (p *SanRPCProtocol) HandleMessage(ctx context.Context, r protocol.Message) (protocol.Message, error) {
+	req, ok := r.(*MessageProtocol)
+	if !ok {
+		return nil, ErrMsgAssertInvalid
 	}
-	res.Metadata[ServiceError] = err.Error()
-	return res, err
+
+	resp := &MessageProtocol{}
+
+	log.Infof("req msg: %v", req)
+	err := p.DisspatchMessage(req, resp)
+	log.Error(err)
+	if err != nil {
+		if e, ok := err.(*errs.Error); ok {
+			resp.RetCode = e.Code
+			resp.RetMsg = e.Msg
+			return resp, nil
+		}
+		resp.RetCode = 999
+		resp.RetMsg = err.Error()
+		return resp, nil
+	}
+	log.Infof("resp msg: %v", resp)
+	return resp, nil
 }
