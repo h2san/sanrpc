@@ -36,6 +36,7 @@ func (p *SanRPCProtocol) DecodeMessage(r io.Reader) (protocol.Message, error) {
 	head := make([]byte, headLen)
 	n ,err := io.ReadFull(r,head)
 	if err != nil {
+		log.Debug(err)
 		return nil, err
 	}
 	if n != headLen {
@@ -49,7 +50,7 @@ func (p *SanRPCProtocol) DecodeMessage(r io.Reader) (protocol.Message, error) {
 		return nil, ErrReadMsgMagicInvalid
 	}
 	if bodylen == 0 {
-		return nil, ErrReadMsgBodyInvalid
+		return &MessageProtocol{}, nil
 	}
 	msg := make([]byte, bodylen)
 	n,err = io.ReadFull(r, msg)
@@ -70,7 +71,9 @@ func (p *SanRPCProtocol) DecodeMessage(r io.Reader) (protocol.Message, error) {
 }
 
 func (p *SanRPCProtocol) EncodeMessage(msg protocol.Message) ([]byte,error) {
+
 	m, ok := msg.(*MessageProtocol)
+	log.Debug(msg)
 	if !ok {
 		log.Errorf("rpc: encoding msg error %+v", msg)
 		return nil , ErrMsgAssertInvalid
@@ -80,7 +83,12 @@ func (p *SanRPCProtocol) EncodeMessage(msg protocol.Message) ([]byte,error) {
 		return nil, ErrServerMarshalFail
 	}
 
-	return data, nil
+	d := make([]byte, headLen + len(data))
+
+	binary.BigEndian.PutUint32(d[:4], uint32(SanrpcMagic_SANRPC_MAGIC_VALUE))
+	binary.BigEndian.PutUint32(d[4:8], uint32(len(data)))
+	copy(d[8:],data)
+	return d, nil
 }
 
 func (p *SanRPCProtocol) DisspatchMessage(req *MessageProtocol, resp *MessageProtocol)  error{
@@ -124,6 +132,7 @@ func (p *SanRPCProtocol) DisspatchMessage(req *MessageProtocol, resp *MessagePro
 	}
 
 	data, err := cc.Encode(replyv)
+	log.Debug(data)
 	if err != nil {
 		return errs.ErrServerEncodeDataErr
 	}
@@ -144,14 +153,21 @@ func (p *SanRPCProtocol) HandleMessage(ctx context.Context, r protocol.Message) 
 	log.Error(err)
 	if err != nil {
 		if e, ok := err.(*errs.Error); ok {
-			resp.RetCode = e.Code
-			resp.RetMsg = e.Msg
+			resp.Err.Type = e.Type
+			resp.Err.Code = e.Code
+			resp.Err.Msg = e.Msg
 			return resp, nil
 		}
-		resp.RetCode = 999
-		resp.RetMsg = err.Error()
+		resp.Err.Type = 0
+		resp.Err.Code = 999
+		resp.Err.Msg = err.Error()
 		return resp, nil
 	}
 	log.Infof("resp msg: %v", resp)
+	resp.Err = &ErrMsg{
+		Code:0,
+		Type:1,
+		Msg:"success",
+	}
 	return resp, nil
 }

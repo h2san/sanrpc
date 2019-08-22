@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	log "github.com/hillguo/sanlog"
+	"github.com/hillguo/sanrpc/example"
 	"github.com/hillguo/sanrpc/service"
 )
 
@@ -10,8 +11,9 @@ type Test struct {
 
 }
 
-func (t *Test) Add(ctx context.Context, a int , b *int) error {
+func (t *Test) Add(ctx context.Context, a *example.Req , b *example.Resq) error {
 	log.Debug("11")
+
 	return nil
 }
 

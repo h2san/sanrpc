@@ -1,0 +1,11 @@
+syntax = "proto3";
+package example;
+
+message Req {
+    int64 a = 1;
+}
+
+message Resq {
+    int64 b = 1;
+}
+

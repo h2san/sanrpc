@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"errors"
+	"github.com/hillguo/sanrpc/errs"
 	"io"
 	"net"
 	"sync"
@@ -12,7 +13,6 @@ import (
 	log "github.com/hillguo/sanlog"
 	"github.com/hillguo/sanrpc/codec"
 	"github.com/hillguo/sanrpc/protocol/sanrpc"
-	"github.com/hillguo/sanrpc/share"
 )
 
 // ErrShutdown connection is closed.
@@ -68,24 +68,15 @@ func (client *Client) Go(ctx context.Context, servicePath, serviceMethod string,
 	call := new(Call)
 	call.ServicePath = servicePath
 	call.ServiceMethod = serviceMethod
-	meta := ctx.Value(share.ReqMetaDataKey)
+	meta := ctx.Value(ReqMetaDataKey)
 	if meta != nil {
 		call.Metadata = meta.(map[string]string)
 	}
-	if _, ok := ctx.(*share.Context); !ok {
-		ctx = share.NewContext(ctx)
-	}
+
 	call.Args = args
 	call.Reply = reply
 	call.CompressType = codec.CompressNone
 	call.SerializeType = codec.ProtoBuffer
-
-	if compressType, ok := ctx.Value(share.CallCompressType).(codec.CompressType); ok {
-		call.CompressType = compressType
-	}
-	if serializeType, ok := ctx.Value(share.CallSerializeType).(codec.SerializeType); ok {
-		call.SerializeType = serializeType
-	}
 
 	if done == nil {
 		done = make(chan *Call, 10)
@@ -123,7 +114,7 @@ func (client *Client) Call(ctx context.Context, servicePath, serviceMethod strin
 		return ctx.Err()
 	case call := <-DoneChan:
 		err = call.Error
-		meta := ctx.Value(share.ResMetaDataKey)
+		meta := ctx.Value(ResMetaDataKey)
 		if meta != nil && len(call.ResMetadata) > 0 {
 			resMata := meta.(map[string]string)
 			for k, v := range call.ResMetadata {
@@ -162,35 +153,31 @@ func (client *Client) send(ctx context.Context, call *Call) {
 		*cseq = seq
 	}
 
-	req := sanrpc.NewMessage()
-	req.SetMessageType(sanrpc.Request)
-	req.SetSeq(seq)
-	if call.Reply == nil {
-		req.SetOneway(true)
-	}
-	if call.ServicePath == "" && call.ServiceMethod == "" {
-		req.SetHeartbeat(true)
-	} else {
-		req.SetSerializeType(call.SerializeType)
-		if call.Metadata != nil {
-			req.Metadata = call.Metadata
-		}
-		req.ServicePath = call.ServicePath
-		req.ServiceMethod = call.ServiceMethod
+	req := &sanrpc.MessageProtocol{}
+	req.Header = &sanrpc.HeaderMsg{}
+	req.Header.CallType = uint32(sanrpc.SanrpcMsgType_SANRPC_REQUEST_MSG)
+	req.Header.Seq = seq
 
-		data, err := cc.Encode(call.Args)
-		if err != nil {
-			call.Error = err
-			call.done()
-			return
-		}
-		if len(data) > 1024 && call.CompressType != codec.CompressNone {
-			req.SetCompressType(call.CompressType)
-		}
-		req.Payload = data
+	req.Header.EncodeType = uint32(call.SerializeType)
+	if call.Metadata != nil {
+		req.Header.MetaData = call.Metadata
 	}
+	req.Header.ServiceName = call.ServicePath
+	req.Header.MethodName = call.ServiceMethod
 
-	data := req.Encode()
+	data, err := cc.Encode(call.Args)
+	if err != nil {
+		call.Error = err
+		call.done()
+		return
+	}
+	if len(data) > 1024 && call.CompressType != codec.CompressNone {
+		req.Header.CompressType = uint32(call.CompressType)
+	}
+	req.Data = data
+
+	msg := sanrpc.SanRPCProtocol{}
+	d, err:= msg.EncodeMessage(req)
 
 	if client.option.WriteTimeout != 0 {
 		_ = client.Conn.SetWriteDeadline(time.Now().Add(client.option.WriteTimeout))
@@ -204,7 +191,7 @@ func (client *Client) send(ctx context.Context, call *Call) {
 		call.done()
 		return
 	}
-	_, err := client.Conn.Write(data)
+	_, err = client.Conn.Write(d)
 	if err != nil {
 		client.mutex.Lock()
 		call = client.pending[seq]
@@ -216,58 +203,54 @@ func (client *Client) send(ctx context.Context, call *Call) {
 		}
 		return
 	}
-	isOneWay := req.IsOneway()
-	if isOneWay {
-		client.mutex.Lock()
-		call = client.pending[seq]
-		delete(client.pending, seq)
-		client.mutex.Unlock()
-		if call != nil {
-			call.done()
-		}
-	}
-
 }
 
 func (client *Client) input() {
 	var err error
-	var res = sanrpc.NewMessage()
+	var msgProtocol = &sanrpc.SanRPCProtocol{}
 
 	for err == nil {
 		if client.option.ReadTimeout != 0 {
 			_ = client.Conn.SetReadDeadline(time.Now().Add(client.option.ReadTimeout))
 		}
-		err = res.Decode(client.r)
+		msg, err := msgProtocol.DecodeMessage(client.r)
 		if err != nil {
+			log.Debug("DecodeMessage", err)
 			break
 		}
+		res, _ := msg.(*sanrpc.MessageProtocol)
 
-		seq := res.Seq()
+		if res.Header == nil {
+			res.Header = &sanrpc.HeaderMsg{}
+		}
+		seq := res.Header.Seq
 		var call *Call
 
-		isServerMessage := res.MessageType() == sanrpc.Request && !res.IsHeartbeat() && res.IsOneway()
-		if !isServerMessage {
-			client.mutex.Lock()
-			call = client.pending[seq]
-			delete(client.pending, seq)
-			client.mutex.Unlock()
-		}
+		client.mutex.Lock()
+		call = client.pending[seq]
+		delete(client.pending, seq)
+		client.mutex.Unlock()
 
+		if res.Err == nil {
+			res.Err.Code = 0
+		}
 		switch {
-		case call == nil:
-			continue
-		case res.MessageStatusType() == sanrpc.Error:
-			if len(res.Metadata) > 0 {
-				meta := make(map[string]string, len(res.Metadata))
-				for k, v := range res.Metadata {
+		case res.Err.Code != 0:
+			if len(res.Header.MetaData) > 0 {
+				meta := make(map[string]string, len(res.Header.MetaData))
+				for k, v := range res.Header.MetaData {
 					meta[k] = v
 				}
 				call.ResMetadata = meta
-				call.Error = ServiceError("server error")
+				call.Error = &errs.Error{
+					Type: res.Err.Type,
+					Code: res.Err.Code,
+					Msg:  res.Err.Msg,
+				}
 			}
 			call.done()
 		default:
-			data := res.Payload
+			data := res.Data
 			if len(data) > 0 {
 				cc := codec.Codecs[call.SerializeType]
 				if cc == nil {
@@ -279,12 +262,12 @@ func (client *Client) input() {
 					}
 				}
 			}
-			if len(res.Metadata) > 0 {
-				meta := make(map[string]string, len(res.Metadata))
-				for k, v := range res.Metadata {
+			if len(res.Header.MetaData) > 0 {
+				meta := make(map[string]string, len(res.Header.MetaData))
+				for k, v := range res.Header.MetaData {
 					meta[k] = v
 				}
-				call.ResMetadata = res.Metadata
+				call.ResMetadata = res.Header.MetaData
 			}
 			call.done()
 		}
@@ -298,7 +281,7 @@ func (client *Client) input() {
 	if err == io.EOF {
 		err = ErrShutdown
 	} else {
-		err = io.ErrUnexpectedEOF
+		//err = io.ErrUnexpectedEOF
 	}
 	for _, call := range client.pending {
 		call.Error = err
@@ -307,22 +290,6 @@ func (client *Client) input() {
 	client.mutex.Unlock()
 	if err != nil && err != io.EOF && !closing {
 		log.Error("sanrpc: client protocol error:", err)
-	}
-}
-
-func (client *Client) heartbeat() {
-	t := time.NewTicker(client.option.HeartbeatInterval)
-
-	for range t.C {
-		if client.shutdown || client.closing {
-			t.Stop()
-			return
-		}
-
-		err := client.Call(context.Background(), "", "", nil, nil)
-		if err != nil {
-			log.Warnf("failed to heartbeat to %s", client.Conn.RemoteAddr().String())
-		}
 	}
 }
 

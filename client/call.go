@@ -25,7 +25,7 @@ func (call *Call) done() {
 	select {
 	case call.Done <- call:
 	default:
-		log.Debug("rpc: discarding Call reply due to insufficient Done chan capacity")
+		log.Info("rpc: discarding Call reply due to insufficient Done chan capacity")
 
 	}
 }

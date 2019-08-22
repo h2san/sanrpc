@@ -24,22 +24,27 @@ enum SanrpcMsgType {
     SANRPC_RESPONSE_MSG = 2;
 }
 
-message MsgHeader {
+message HeaderMsg {
     uint32 version = 1;
     uint32 call_type = 2;
     uint64 seq = 3;
     uint32 timeout = 4;
     string service_name = 5;
     string method_name = 6;
-    SanrpcContentEncodeType encode_type = 7;
-    SanrpcCompressType compress_type = 8;
-    bytes meta_data = 9;
+    uint32 encode_type = 7;
+    uint32 compress_type = 8;
+    map<string,string> meta_data = 9;
 
 }
 
+message ErrMsg {
+    int32 type = 1;
+    int32 code = 2;
+    string msg = 3;
+}
+
 message MessageProtocol {
-    MsgHeader header = 1;
-    int32  ret_code = 2;
-    string ret_msg = 3;
+    HeaderMsg header = 1;
+    ErrMsg err = 2;
     bytes data = 4;
 }

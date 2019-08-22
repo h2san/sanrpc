@@ -172,13 +172,13 @@ func (c *xClient) Go(ctx context.Context, serviceMethod string, args interface{}
 	}
 
 	if c.auth != "" {
-		metadata := ctx.Value(share.ReqMetaDataKey)
+		metadata := ctx.Value(share.ReqMetaDataKey{})
 		if metadata == nil {
 			metadata = map[string]string{}
-			ctx = context.WithValue(ctx, share.ReqMetaDataKey, metadata)
+			ctx = context.WithValue(ctx, share.ReqMetaDataKey{}, metadata)
 		}
 		m := metadata.(map[string]string)
-		m[share.AuthKey] = c.auth
+		m[share.SanRPC_AUTH_KEY] = c.auth
 	}
 
 	_, client, err := c.selectClient(ctx, c.servicePath, serviceMethod, args)
@@ -194,13 +194,13 @@ func (c *xClient) Call(ctx context.Context, serviceMethod string, args interface
 	}
 
 	if c.auth != "" {
-		metadata := ctx.Value(share.ReqMetaDataKey)
+		metadata := ctx.Value(share.ReqMetaDataKey{})
 		if metadata == nil {
 			metadata = map[string]string{}
-			ctx = context.WithValue(ctx, share.ReqMetaDataKey, metadata)
+			ctx = context.WithValue(ctx, share.ReqMetaDataKey{}, metadata)
 		}
 		m := metadata.(map[string]string)
-		m[share.AuthKey] = c.auth
+		m[share.SanRPC_AUTH_KEY] = c.auth
 	}
 
 	var err error

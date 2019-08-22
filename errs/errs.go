@@ -31,7 +31,7 @@ const (
 )
 
 type Error struct {
-	Type int
+	Type int32
 	Code int32
 	Msg  string
 }

@@ -3,14 +3,10 @@ package client
 import (
 	"bufio"
 	"crypto/tls"
-	"errors"
-	"io"
 	"net"
-	"net/http"
 	"time"
 
 	log "github.com/hillguo/sanlog"
-	"github.com/hillguo/sanrpc/share"
 )
 
 // ReaderBuffSize is used for bufio reader.
@@ -26,8 +22,6 @@ func (client *Client) Connect(network, address string) error {
 	var err error
 
 	switch network {
-	case "http":
-		conn, err = newDirectHTTPConn(client, network, address)
 	case "unix":
 		conn, err = newDirectConn(client, network, address)
 	default:
@@ -54,7 +48,7 @@ func (client *Client) Connect(network, address string) error {
 		go client.input()
 
 		if client.option.Heartbeat && client.option.HeartbeatInterval > 0 {
-			go client.heartbeat()
+			//go client.heartbeat()
 		}
 
 	}
@@ -91,51 +85,4 @@ func newDirectConn(c *Client, network, address string) (net.Conn, error) {
 	return conn, nil
 }
 
-var connected = "200 Connected to sanrpc"
 
-func newDirectHTTPConn(c *Client, network, address string) (net.Conn, error) {
-	path := c.option.RPCPath
-	if path == "" {
-		path = share.DefaultRPCPath
-	}
-
-	var conn net.Conn
-	var tlsConn *tls.Conn
-	var err error
-
-	if c != nil && c.option.TLSConfig != nil {
-		dialer := &net.Dialer{
-			Timeout: c.option.ConnectTimeout,
-		}
-		tlsConn, err = tls.DialWithDialer(dialer, "tcp", address, c.option.TLSConfig)
-		//or conn:= tls.Client(netConn, &config)
-
-		conn = net.Conn(tlsConn)
-	} else {
-		conn, err = net.DialTimeout("tcp", address, c.option.ConnectTimeout)
-	}
-	if err != nil {
-		log.Errorf("failed to dial server: %v", err)
-		return nil, err
-	}
-
-	io.WriteString(conn, "CONNECT "+path+" HTTP/1.0\n\n")
-
-	// Require successful HTTP response
-	// before switching to RPC protocol.
-	resp, err := http.ReadResponse(bufio.NewReader(conn), &http.Request{Method: "CONNECT"})
-	if err == nil && resp.Status == connected {
-		return conn, nil
-	}
-	if err == nil {
-		log.Errorf("unexpected HTTP response: %v", err)
-		err = errors.New("unexpected HTTP response: " + resp.Status)
-	}
-	conn.Close()
-	return nil, &net.OpError{
-		Op:   "dial-http",
-		Net:  network + " " + address,
-		Addr: nil,
-		Err:  err,
-	}
-}
