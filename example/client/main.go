@@ -22,7 +22,7 @@ func main()  {
 
 	err = c.Call(context.Background(),"test","add",a, b)
 	if err != nil {
-		log.Fatal(err)
+		log.Debug(err)
 	}
 	log.Debug(a.String(), *b)
 }

@@ -11,7 +11,7 @@ type Test struct {
 
 }
 
-func (t *Test) Add(ctx context.Context, a *example.Req , b *example.Resq) error {
+func (t *Test) Add(ctx context.Context, a *example.Req , b *example.Resq) error  {
 	log.Debug("11")
 
 	return nil

@@ -106,8 +106,14 @@ func (p *SanRPCProtocol) DisspatchMessage(req *MessageProtocol, resp *MessagePro
 	if mtype == nil {
 		return errs.ErrServerNoMethod
 	}
+	var argv interface{}
+	if mtype.ArgType.Kind() != reflect.Ptr {
+		argv = reflect.New(mtype.ArgType).Elem().Interface()
+	} else {
+		argv = reflect.New(mtype.ArgType.Elem()).Interface()
+	}
 
-	argv := reflect.New(mtype.ArgType.Elem()).Interface()
+
 	cc := codec.Codecs[codec.SerializeType(req.Header.EncodeType)]
 	if cc == nil {
 		return errs.ErrServerNoSupportEncodeType
@@ -121,11 +127,9 @@ func (p *SanRPCProtocol) DisspatchMessage(req *MessageProtocol, resp *MessagePro
 
 	ctx:=context.Background()
 
-	if mtype.ArgType.Kind() != reflect.Ptr {
-		err = service.Call(ctx, mtype, reflect.ValueOf(argv).Elem(), reflect.ValueOf(replyv))
-	} else {
-		err = service.Call(ctx, mtype, reflect.ValueOf(argv), reflect.ValueOf(replyv))
-	}
+
+	err = service.Call(ctx, mtype, reflect.ValueOf(argv), reflect.ValueOf(replyv))
+
 
 	if err != nil {
 		return err
@@ -146,7 +150,11 @@ func (p *SanRPCProtocol) HandleMessage(ctx context.Context, r protocol.Message) 
 		return nil, ErrMsgAssertInvalid
 	}
 
-	resp := &MessageProtocol{}
+	resp := &MessageProtocol{
+		Err:&ErrMsg{
+
+		},
+	}
 
 	log.Infof("req msg: %v", req)
 	err := p.DisspatchMessage(req, resp)

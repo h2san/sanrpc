@@ -41,8 +41,16 @@ func (t *httpTransport) Close() error{
 	return nil
 }
 
-func (t *httpTransport) ServeHTTP (w http.ResponseWriter, req *http.Request){
-	_, err := t.opts.MsgProtocol.HandleMessage(req.Context(),req)
+func (t *httpTransport) ServeHTTP (w http.ResponseWriter, req *http.Request) {
+	if req.URL.Path != "/SanHTTP" {
+		http.NotFound(w,req)
+		return
+	}
+	msg := sanhttp.Msg{
+		Req:req,
+		Resp:w,
+	}
+	_, err := t.opts.MsgProtocol.HandleMessage(req.Context(),msg)
 	if err != nil {
 		log.Error("msg protocol handle message fail", err)
 	}
