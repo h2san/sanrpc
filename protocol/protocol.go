@@ -9,8 +9,12 @@ import (
 //Message 完整的包体
 type Message interface{}
 
-//MsgProtocol rpc protocol inteface
 type MsgProtocol interface {
+
+}
+
+//RpcMsgProtocol rpc protocol inteface
+type RpcMsgProtocol interface {
 	DecodeMessage(r io.Reader) (Message, error)
 	HandleMessage(ctx context.Context, req Message) (resp Message, err error)
 	EncodeMessage(res Message) ([]byte, error)
@@ -18,9 +22,7 @@ type MsgProtocol interface {
 	RegisterService(service interface{}) error
 }
 
-//HTTPHandlerProtocol http protocol interface
-type HTTPHandlerProtocol interface {
+//HttpMsgProtocol http protocol interface
+type HttpMsgProtocol interface {
 	ServeHTTP(w http.ResponseWriter,req *http.Request)
-	RegisterService(service interface{}) error
-	AddPlugin(plugin interface{})
 }

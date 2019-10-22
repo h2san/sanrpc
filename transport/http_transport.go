@@ -2,6 +2,7 @@ package transport
 
 import (
 	log "github.com/hillguo/sanlog"
+	"github.com/hillguo/sanrpc/protocol"
 	"github.com/hillguo/sanrpc/protocol/sanhttp"
 	"net/http"
 )
@@ -42,17 +43,10 @@ func (t *httpTransport) Close() error{
 }
 
 func (t *httpTransport) ServeHTTP (w http.ResponseWriter, req *http.Request) {
-	if req.URL.Path != "/SanHTTP" {
-		http.NotFound(w,req)
-		return
+	app,ok := t.opts.MsgProtocol.(protocol.HttpMsgProtocol)
+	if ok {
+		app.ServeHTTP(w,req)
 	}
-	msg := sanhttp.Msg{
-		Req:req,
-		Resp:w,
-	}
-	_, err := t.opts.MsgProtocol.HandleMessage(req.Context(),msg)
-	if err != nil {
-		log.Error("msg protocol handle message fail", err)
-	}
+	log.Error("sanrpc: msg protocol is not http protocol")
 }
 

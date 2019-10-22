@@ -185,7 +185,13 @@ func (t *tcpTransport) serveConn(conn net.Conn) {
 				if t.opts.ReadTimeout != 0 {
 					conn.SetReadDeadline(t0.Add(time.Duration(t.opts.ReadTimeout)))
 				}
-				req, err := t.opts.MsgProtocol.DecodeMessage(r)
+				rpc ,ok := t.opts.MsgProtocol.(protocol.RpcMsgProtocol)
+				if !ok {
+					cancelCtx()
+					log.Errorf("sanrpc: msg protocol not rpc. cancelCtx")
+					return
+				}
+				req, err := rpc.DecodeMessage(r)
 				if err != nil {
 					if err == io.EOF {
 						log.Infof("client has closed this connection: %s", conn.RemoteAddr().String())
@@ -249,7 +255,13 @@ func (t *tcpTransport) serveConn(conn net.Conn) {
 							}
 						}()
 						log.Infof("get a message from in queue to handler")
-						resp, err := t.opts.MsgProtocol.HandleMessage(ctx, req)
+						rpc ,ok := t.opts.MsgProtocol.(protocol.RpcMsgProtocol)
+						if !ok {
+							cancelCtx()
+							log.Errorf("sanrpc: msg protocol not rpc. cancelCtx")
+							return
+						}
+						resp, err := rpc.HandleMessage(ctx, req)
 						if err != nil {
 							log.Warnf("rpc: failed to handle request: %v", err)
 						}
@@ -286,7 +298,13 @@ func (t *tcpTransport) serveConn(conn net.Conn) {
 					return
 				case resp := <-out:
 					log.Infof("read a resp message form out queue")
-					data,err := t.opts.MsgProtocol.EncodeMessage(resp)
+					rpc ,ok := t.opts.MsgProtocol.(protocol.RpcMsgProtocol)
+					if !ok {
+						cancelCtx()
+						log.Errorf("sanrpc: msg protocol not rpc. cancelCtx")
+						return
+					}
+					data,err := rpc.EncodeMessage(resp)
 					if err != nil{
 						log.Error(err)
 						return

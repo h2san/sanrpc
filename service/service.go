@@ -3,6 +3,7 @@ package service
 import (
 	log "github.com/hillguo/sanlog"
 	"github.com/hillguo/sanrpc/errs"
+	"github.com/hillguo/sanrpc/protocol"
 	"github.com/hillguo/sanrpc/protocol/sanrpc"
 	"github.com/hillguo/sanrpc/transport"
 )
@@ -43,5 +44,8 @@ func (s *service) Register(serviceDesc interface{}) error{
 	if p == nil {
 		return errs.ErrServerNoMsgProtocol
 	}
-	return  p.RegisterService(serviceDesc)
+	if rpc, ok := p.(protocol.RpcMsgProtocol); ok {
+		return  rpc.RegisterService(serviceDesc)
+	}
+	return nil
 }
