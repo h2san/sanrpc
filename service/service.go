@@ -44,8 +44,8 @@ func (s *service) Register(serviceDesc interface{}) error{
 	if p == nil {
 		return errs.ErrServerNoMsgProtocol
 	}
-	if rpc, ok := p.(protocol.RpcMsgProtocol); ok {
-		return  rpc.RegisterService(serviceDesc)
+	if rs, ok := p.(protocol.RegisterServicer); ok {
+		return  rs.RegisterService(serviceDesc)
 	}
 	return nil
 }

@@ -3,7 +3,7 @@ package transport
 import (
 	log "github.com/hillguo/sanlog"
 	"github.com/hillguo/sanrpc/protocol"
-	"github.com/hillguo/sanrpc/protocol/sanhttp"
+	"github.com/hillguo/sanrpc/protocol/httpx"
 	"net/http"
 )
 
@@ -28,7 +28,7 @@ func (t *httpTransport) ListenAndServer(opt ...TransportOption) error{
 	}
 
 	if t.opts.MsgProtocol == nil {
-		t.opts.MsgProtocol = &sanhttp.SanHTTPProtocol{}
+		t.opts.MsgProtocol = httpx.DefaultHTTProtocol
 	}
 	err := http.ListenAndServe(t.opts.Address, t)
 	if err != nil {
