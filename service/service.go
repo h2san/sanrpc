@@ -4,7 +4,6 @@ import (
 	log "github.com/hillguo/sanlog"
 	"github.com/hillguo/sanrpc/errs"
 	"github.com/hillguo/sanrpc/protocol"
-	"github.com/hillguo/sanrpc/protocol/sanrpc"
 	"github.com/hillguo/sanrpc/transport"
 )
 
@@ -20,8 +19,7 @@ type service struct {
 func New(opts ...Option) Service {
 	s := &service{
 		opts: &Options{
-			ServeTransport: transport.DefaultTransport,
-			MsgProtocol:&sanrpc.SanRPCProtocol{},
+
 		},
 	}
 	for _, o := range opts {

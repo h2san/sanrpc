@@ -24,7 +24,7 @@ type RpcMsgProtocol interface {
 
 //HttpMsgProtocol http protocol interface
 type HttpMsgProtocol interface {
-	ServeHTTP(w http.ResponseWriter,req *http.Request)
+	ServeHTTP(w http.ResponseWriter, r *http.Request)
 }
 
 type RegisterServicer interface {

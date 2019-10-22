@@ -14,7 +14,7 @@ type httpTransport struct {
 
 func NewHTTPTransport(opt ...TransportOption) ServerTransport{
 	opts := &TransportOptions{
-
+		MsgProtocol:    &httpx.HTTProtocol{},
 	}
 	for _, o := range opt {
 		o(opts)
@@ -30,6 +30,9 @@ func (t *httpTransport) ListenAndServer(opt ...TransportOption) error{
 	if t.opts.MsgProtocol == nil {
 		t.opts.MsgProtocol = httpx.DefaultHTTProtocol
 	}
+
+
+	log.Infof("http listening network:%s ,address:%s", t.opts.NetWork, t.opts.Address)
 	err := http.ListenAndServe(t.opts.Address, t)
 	if err != nil {
 		log.Errorf("ListenAndServe fail:", err)
@@ -43,10 +46,12 @@ func (t *httpTransport) Close() error{
 }
 
 func (t *httpTransport) ServeHTTP (w http.ResponseWriter, req *http.Request) {
-	app,ok := t.opts.MsgProtocol.(protocol.HttpMsgProtocol)
-	if ok {
+
+	if app,ok := t.opts.MsgProtocol.(protocol.HttpMsgProtocol); ok {
 		app.ServeHTTP(w,req)
+	}else {
+		log.Error("sanrpc: msg protocol is not http protocol")
 	}
-	log.Error("sanrpc: msg protocol is not http protocol")
+
 }
 
