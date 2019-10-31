@@ -2,7 +2,7 @@
     servername = "example"
     [[server.services]]
         name = "test"
-        network = "tcp"
+        network = "http"
         address = "127.0.0.1:9399"
         tlscertfile = ""
         tlskeyfile = ""
@@ -10,8 +10,7 @@
         outmsgchansize = 1024
         readtimeout = 0
         writetimeout = 0
-        transport = "tcp"
-        protocol = "sanrpc"
+        protocol = "http"
 
 [redis]
 
