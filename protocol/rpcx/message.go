@@ -421,14 +421,14 @@ func (m *Message) Decode(r io.Reader) error {
 	l = binary.BigEndian.Uint32(data[n:4])
 	n = n + 4
 	nEnd := n + int(l)
-	m.ServicePath = util.SliceByteToString(data[n:nEnd])
+	m.ServicePath = SliceByteToString(data[n:nEnd])
 	n = nEnd
 
 	// parse serviceMethod
 	l = binary.BigEndian.Uint32(data[n : n+4])
 	n = n + 4
 	nEnd = n + int(l)
-	m.ServiceMethod = util.SliceByteToString(data[n:nEnd])
+	m.ServiceMethod = SliceByteToString(data[n:nEnd])
 	n = nEnd
 
 	// parse meta

@@ -5,3 +5,4 @@ vendor/
 .glide/
 .idea
 .vscode
+*.exe

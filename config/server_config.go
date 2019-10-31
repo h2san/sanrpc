@@ -37,5 +37,4 @@ func init(){
 		fmt.Println(err)
 		panic("config parse fail" + err.Error())
 	}
-	log.Info(config)
 }

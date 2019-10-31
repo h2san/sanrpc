@@ -25,9 +25,7 @@ func NewServicesWithConfig(server_config *config.ServerConfig) []Service {
 		panic("server_config nil")
 		return nil
 	}
-	log.Info(server_config)
 	ss := make([]Service,0,len(server_config.Services))
-	log.Info(len(ss))
 	for _, svr :=range server_config.Services {
 		log.Info(svr)
 		s := &service{
@@ -52,7 +50,6 @@ func NewServicesWithConfig(server_config *config.ServerConfig) []Service {
 		}
 		ss= append(ss,s)
 	}
-	log.Infof("%v",len(ss))
 	return  ss
 }
 
