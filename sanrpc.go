@@ -25,7 +25,7 @@ func (s *Server) Serve() error{
 	}
 
 	ch := make(chan os.Signal)
-	signal.Notify(ch,syscall.SIGINT, syscall.SIGTERM,syscall.SIGUSR2,syscall.SIGSEGV)
+	signal.Notify(ch,syscall.SIGINT, syscall.SIGTERM,syscall.SIGSEGV)
 	<-ch
 	return nil
 }

@@ -1,0 +1,18 @@
+[server]
+    servername = "example"
+    [[server.services]]
+        name = "test"
+        network = "tcp"
+        address = "127.0.0.1:9399"
+        tlscertfile = ""
+        tlskeyfile = ""
+        inmsgchansize = 1024
+        outmsgchansize = 1024
+        readtimeout = 0
+        writetimeout = 0
+        transport = "tcp"
+        protocol = "sanrpc"
+
+[redis]
+
+[mysql]

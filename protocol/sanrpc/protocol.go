@@ -27,6 +27,8 @@ var (
 	ErrMsgAssertInvalid = errors.New("msg assert fail")
 )
 
+var DefaultSanRPCProtocol = &SanRPCProtocol{}
+
 type SanRPCProtocol struct {
 	protocol.BaseService
 }

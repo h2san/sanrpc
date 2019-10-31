@@ -3,9 +3,9 @@ module github.com/hillguo/sanrpc
 go 1.13
 
 require (
+	github.com/BurntSushi/toml v0.3.1
 	github.com/edwingeng/doublejump v0.0.0-20190102103700-461a0155c7be
 	github.com/golang/protobuf v1.3.2
-	github.com/gorilla/websocket v1.4.1
 	github.com/hillguo/sanlog v0.0.0-20191022162757-c6bf54694bde
 	github.com/juju/ratelimit v1.0.1
 	github.com/julienschmidt/httprouter v1.3.0

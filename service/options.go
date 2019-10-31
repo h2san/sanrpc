@@ -2,14 +2,20 @@ package service
 
 import (
 	"github.com/hillguo/sanrpc/protocol"
-	"github.com/hillguo/sanrpc/transport"
 )
 
 type Options struct {
 	Name string
-	ServeTransport transport.ServerTransport
-	ServeTransportOptions []transport.TransportOption
-	MsgProtocol protocol.MsgProtocol
+	InMsgChanSize uint32
+	OutMsgChanSize uint32
+	ReadTimeout uint32
+	WriteTimeout uint32
+
+	Address        string
+	NetWork        string
+	TLSCertFile    string
+	TLSKeyFile     string
+	MsgProtocol    protocol.MsgProtocol
 }
 
 type Option func(options *Options)
@@ -22,44 +28,37 @@ func WithServiceName(s string) Option{
 
 func WithAddress(s string) Option{
 	return func(o *Options) {
-		o.ServeTransportOptions = append(o.ServeTransportOptions, transport.WithAddress(s))
+		o.Address = s
 	}
 }
 
 func WithNetWork(network string) Option{
 	return func(o *Options) {
-		o.ServeTransportOptions = append(o.ServeTransportOptions, transport.WithNetWork(network))
+		o.NetWork = network
 	}
 }
 
 func WithReadTimeout(timeout uint32) Option{
 	return func(o *Options) {
-		o.ServeTransportOptions = append(o.ServeTransportOptions, transport.WithReadTimeout(timeout))
+		o.ReadTimeout = timeout
 	}
 }
 
 func WithWriteTimeout(timeout uint32) Option{
 	return func(o *Options) {
-		o.ServeTransportOptions = append(o.ServeTransportOptions, transport.WithWriteTimeout(timeout))
+		o.WriteTimeout = timeout
 	}
 }
 
 func WithInMsgChanSize(size uint32) Option{
 	return func(o *Options){
-		o.ServeTransportOptions = append(o.ServeTransportOptions, transport.WithInMsgChanSize(size))
+		o.InMsgChanSize = size
 	}
 }
 
 func WithOutMsgChanSize(size uint32) Option{
 	return func(o *Options){
-		o.ServeTransportOptions = append(o.ServeTransportOptions, transport.WithOutMsgChanSize(size))
-	}
-}
-
-// WithTransport 替换底层server通信层
-func WithTransport(t transport.ServerTransport) Option {
-	return func(o *Options) {
-		o.ServeTransport = t
+		o.OutMsgChanSize = size
 	}
 }
 

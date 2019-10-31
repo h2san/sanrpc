@@ -2,7 +2,6 @@ package httpx
 
 import (
 	"context"
-	"github.com/gorilla/websocket"
 	"github.com/hillguo/sanrpc/protocol"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
@@ -22,7 +21,6 @@ var DefaultHTTProtocol = &HTTProtocol {
 type HTTProtocol struct {
 	protocol.BaseService
 	router  httprouter.Router
-	ws      *websocket.Upgrader
 }
 
 
