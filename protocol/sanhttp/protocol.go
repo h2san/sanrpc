@@ -9,6 +9,7 @@ type SanHttp struct {
 func (s *SanHttp) RegisterService(rcvr interface{}) error {
 	// TODO
 	// url = serverName/methodName
+	return nil
 }
 
 var DefaultHTTProtocol = &SanHttp{
