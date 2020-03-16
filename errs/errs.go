@@ -34,6 +34,7 @@ type Error struct {
 	Type int32
 	Code int32
 	Msg  string
+	Data interface{}
 }
 
 func (e *Error) Error() string {
@@ -47,7 +48,7 @@ func (e *Error) Error() string {
 }
 
 // New 创建一个error，默认为业务错误类型，提高业务开发效率
-func New(code int, msg string) error {
+func New(code int, msg string) *Error {
 	return &Error{
 		Type: ErrorTypeBusiness,
 		Code: int32(code),
@@ -56,7 +57,7 @@ func New(code int, msg string) error {
 }
 
 // NewFrameError 创建一个框架error
-func NewFrameError(code int, msg string) error {
+func NewFrameError(code int, msg string) *Error {
 	return &Error{
 		Type: ErrorTypeFramework,
 		Code: int32(code),

@@ -35,6 +35,6 @@ func init(){
 	config = &Config{}
 	if _, err := toml.DecodeFile("server_config.toml", config); err != nil {
 		fmt.Println(err)
-		panic("config parse fail" + err.Error())
+		//panic("config parse fail" + err.Error())
 	}
 }

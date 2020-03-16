@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+//Option ...
 type Option struct {
 	Retries        int
 	TLSConfig      *tls.Config

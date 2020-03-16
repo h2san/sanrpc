@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"context"
 	"errors"
-	"github.com/hillguo/sanrpc/errs"
 	"io"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/hillguo/sanrpc/errs"
 
 	log "github.com/hillguo/sanlog"
 	"github.com/hillguo/sanrpc/codec"
@@ -177,7 +178,7 @@ func (client *Client) send(ctx context.Context, call *Call) {
 	req.Data = data
 
 	msg := sanrpc.SanRPCProtocol{}
-	d, err:= msg.EncodeMessage(req)
+	d, err := msg.EncodeMessage(req)
 
 	if client.option.WriteTimeout != 0 {
 		_ = client.Conn.SetWriteDeadline(time.Now().Add(client.option.WriteTimeout))
