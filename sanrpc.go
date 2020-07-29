@@ -2,6 +2,7 @@ package sanrpc
 
 import (
 	"github.com/hillguo/sanrpc/service"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -35,4 +36,14 @@ func NewServer() *Server{
 		services:make(map[string]service.Service),
 	}
 	return s
+}
+
+func (s *Server) Register(serviceDesc interface{}) error {
+	for _,s := range s.services {
+		err := s.Register(serviceDesc)
+		if err != nil {
+			log.Fatalln("Register serviceDesc error: ", err)
+		}
+	}
+	return nil
 }

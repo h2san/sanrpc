@@ -13,16 +13,18 @@ func main()  {
 
 	}
 	c := client.NewClient(opt)
-	err := c.Connect("tcp","127.0.0.1:9999")
+	err := c.Connect("tcp","127.0.0.1:8000")
 	if err != nil {
 		log.Fatal(err)
 	}
-	a :=&example.Req{}
+	a :=&example.Req{
+		A:100,
+	}
 	b :=&example.Resq{}
 
 	err = c.Call(context.Background(),"test","add",a, b)
 	if err != nil {
 		log.Debug(err)
 	}
-	log.Debug(a.String(), *b)
+	log.Debug(*a,*b)
 }

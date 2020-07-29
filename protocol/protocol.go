@@ -17,7 +17,8 @@ type MsgProtocol interface {
 
 //RpcMsgProtocol rpc protocol inteface
 type RpcMsgProtocol interface {
-	DecodeMessage(r io.Reader) (Message, error)
+	Handshake(rw io.ReadWriter) error
+	DecodeMessage(rw io.ReadWriter) (Message, error)
 	HandleMessage(ctx context.Context, req Message) (resp Message, err error)
 	EncodeMessage(res Message) ([]byte, error)
 }

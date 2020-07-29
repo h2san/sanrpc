@@ -2,12 +2,10 @@ package main
 
 import (
 	"context"
+	log "github.com/hillguo/sanlog"
 	"github.com/hillguo/sanrpc"
 	"github.com/hillguo/sanrpc/example"
-	"github.com/hillguo/sanrpc/config"
 	"github.com/hillguo/sanrpc/service"
-	log "github.com/hillguo/sanlog"
-	"reflect"
 )
 
 type Test struct {
@@ -25,9 +23,9 @@ type Test2 struct {
 
 }
 
-func (t *Test2) Add(ctx context.Context, a *example.Req , b *example.Resq) error  {
+func (t *Test) Add(ctx context.Context, a *example.Req , b *example.Resq) error  {
 	log.Info("11")
-
+	b.B = a.A + 1
 	return nil
 }
 
@@ -38,24 +36,16 @@ type ATest struct {
 
 func (t *ATest) CAdd(ctx context.Context, a *example.Req , b *example.Resq) error  {
 	log.Info("CAdd")
+	b.B = a.A + 1
 	return nil
 }
 
 func main(){
-	t := reflect.TypeOf(&ATest{})
-	log.Info(t.NumMethod())
 
 	svr := sanrpc.NewServer()
-	c := config.GetConfig()
-	log.Info(c)
-	ss := service.NewServicesWithConfig(&c.Server)
-	log.Info(ss)
-	for _,s := range ss {
-		if s.Name() == "test" {
-			err := s.Register(&ATest{})
-			log.Info(err)
-		}
-		svr.AddService(s.Name(), s)
-	}
+
+	ss := service.New(service.WithServiceName("rpc"), service.WithAddress("127.0.0.1:8000"))
+	svr.AddService("rpc",ss)
+	svr.Register(&Test{})
 	svr.Serve()
 }

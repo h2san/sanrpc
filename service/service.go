@@ -5,7 +5,6 @@ import (
 	"github.com/hillguo/sanrpc/config"
 	"github.com/hillguo/sanrpc/errs"
 	"github.com/hillguo/sanrpc/protocol"
-	"github.com/hillguo/sanrpc/protocol/sanhttp"
 	"github.com/hillguo/sanrpc/protocol/sanrpc"
 )
 
@@ -37,13 +36,11 @@ func NewServicesWithConfig(server_config *config.ServerConfig) []Service {
 				WriteTimeout:   svr.OutMsgChanSize,
 				Address:        svr.Address,
 				NetWork:        svr.NetWork,
-				TLSCertFile:    svr.TLSCertFile,
-				TLSKeyFile:     svr.TLSKeyFile,
 			},
 		}
 		if svr.Protocol == "http" {
 			s.ServeTransport = NewHTTPTransport(s)
-			s.opts.MsgProtocol = sanhttp.DefaultHTTProtocol
+			//s.opts.MsgProtocol = sanhttp.Default()
 		} else {
 			s.ServeTransport = NewTCPTransport(s)
 			s.opts.MsgProtocol = sanrpc.DefaultSanRPCProtocol
@@ -64,8 +61,6 @@ func New(opts ...Option) Service {
 			WriteTimeout:   0,
 			Address:        "",
 			NetWork:        "tcp",
-			TLSCertFile:    "",
-			TLSKeyFile:     "",
 			MsgProtocol:    sanrpc.DefaultSanRPCProtocol,
 		},
 	}

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"bufio"
 	"context"
 	"crypto/tls"
 	"fmt"
@@ -132,13 +131,29 @@ func (t *tcpTransport) serveConn(conn net.Conn) {
 		log.Infof("sanrpc: TLS handshake success")
 	}
 
+
+	rpc ,ok := t.s.opts.MsgProtocol.(protocol.RpcMsgProtocol)
+	if !ok {
+		log.Errorf("sanrpc: msg protocol not rpc.")
+		return
+	}
+	// handshake
+	if d := t.s.opts.ReadTimeout; d != 0 {
+		conn.SetReadDeadline(time.Now().Add(time.Duration(d)))
+	}
+	if d := t.s.opts.WriteTimeout; d != 0 {
+		conn.SetWriteDeadline(time.Now().Add(time.Duration(d)))
+	}
+	if err := rpc.Handshake(conn);err != nil {
+		log.Errorf("sanrpc: rpc protocol Handshake fail. error:%v",err)
+		return
+	}
+
 	ctx := context.Background()
 	ctx, cancelCtx := context.WithCancel(ctx)
 
 	in := make(chan protocol.Message, t.s.opts.InMsgChanSize)
 	out := make(chan protocol.Message, t.s.opts.OutMsgChanSize)
-
-	r := bufio.NewReaderSize(conn, ReaderBuffsize)
 
 	var wg sync.WaitGroup
 	wg.Add(3)
@@ -162,39 +177,38 @@ func (t *tcpTransport) serveConn(conn net.Conn) {
 			}()
 
 			for {
-
-				t0 := time.Now()
-				if t.s.opts.ReadTimeout != 0 {
-					conn.SetReadDeadline(t0.Add(time.Duration(t.s.opts.ReadTimeout)))
-				}
-				rpc ,ok := t.s.opts.MsgProtocol.(protocol.RpcMsgProtocol)
-				if !ok {
-					cancelCtx()
-					log.Errorf("sanrpc: msg protocol not rpc. cancelCtx")
-					return
-				}
-				req, err := rpc.DecodeMessage(r)
-				if err != nil {
-					if err == io.EOF {
-						log.Infof("client has closed this connection: %s", conn.RemoteAddr().String())
-					} else if strings.Contains(err.Error(), "use of closed network connection") {
-						log.Infof("sanrpc: connection %s is closed", conn.RemoteAddr().String())
-					} else {
-						log.Errorf("sanrpc: failed to read request: %v", err)
-					}
-					log.Infof("connection: %s read routine context done", conn.RemoteAddr().String())
-					return
-				}
-
-				log.Infof("read a message from conn %v", conn.RemoteAddr())
-
 				select {
 				case <-ctx.Done():
 					log.Infof("connection: %s read routine context done %v", conn.RemoteAddr().String(), ctx.Err())
 					return
-				case in <- req:
-					log.Infof("put message into in queue")
+				default:
+					t0 := time.Now()
+					if t.s.opts.ReadTimeout != 0 {
+						conn.SetReadDeadline(t0.Add(time.Duration(1)))
+					}
+					rpc, ok := t.s.opts.MsgProtocol.(protocol.RpcMsgProtocol)
+					if !ok {
+						cancelCtx()
+						log.Errorf("sanrpc: msg protocol not rpc. cancelCtx")
+						return
+					}
+					req, err := rpc.DecodeMessage(conn)
+					if err != nil {
+						if err == io.EOF {
+							log.Infof("client has closed this connection: %s", conn.RemoteAddr().String())
+						} else if strings.Contains(err.Error(), "use of closed network connection") {
+							log.Infof("sanrpc: connection %s is closed", conn.RemoteAddr().String())
+						} else {
+							log.Errorf("sanrpc: failed to read request: %v", err)
+						}
+						log.Infof("connection: %s read routine context done", conn.RemoteAddr().String())
+						return
+					}
+
+					log.Infof("read a message from conn %v", conn.RemoteAddr())
+					in <- req
 				}
+
 			}
 		}(ctx, in)
 	}

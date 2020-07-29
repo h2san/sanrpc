@@ -100,6 +100,7 @@ func (client *Client) Call(ctx context.Context, servicePath, serviceMethod strin
 
 	seq := new(uint64)
 	ctx = context.WithValue(ctx, seqKey{}, seq)
+	log.Debugf("req %+v", args)
 	DoneChan := client.Go(ctx, servicePath, serviceMethod, args, reply, make(chan *Call, 1)).Done
 	var err error
 	select {
@@ -112,7 +113,7 @@ func (client *Client) Call(ctx context.Context, servicePath, serviceMethod strin
 			call.Error = ctx.Err()
 			call.done()
 		}
-		return ctx.Err()
+		err = ctx.Err()
 	case call := <-DoneChan:
 		err = call.Error
 		meta := ctx.Value(ResMetaDataKey)
@@ -122,8 +123,9 @@ func (client *Client) Call(ctx context.Context, servicePath, serviceMethod strin
 				resMata[k] = v
 			}
 		}
-		return err
 	}
+	log.Debugf("resp %+v", reply)
+	return err
 }
 
 func (client *Client) send(ctx context.Context, call *Call) {
@@ -177,6 +179,7 @@ func (client *Client) send(ctx context.Context, call *Call) {
 	}
 	req.Data = data
 
+	log.Debugf("req msg %+v", req)
 	msg := sanrpc.SanRPCProtocol{}
 	d, err := msg.EncodeMessage(req)
 
@@ -214,13 +217,13 @@ func (client *Client) input() {
 		if client.option.ReadTimeout != 0 {
 			_ = client.Conn.SetReadDeadline(time.Now().Add(client.option.ReadTimeout))
 		}
-		msg, err := msgProtocol.DecodeMessage(client.r)
+		msg, err := msgProtocol.DecodeMessage(client.Conn)
 		if err != nil {
 			log.Debug("DecodeMessage", err)
 			break
 		}
 		res, _ := msg.(*sanrpc.MessageProtocol)
-
+		log.Debugf("resp msg %+v", res)
 		if res.Header == nil {
 			res.Header = &sanrpc.HeaderMsg{}
 		}
@@ -243,11 +246,11 @@ func (client *Client) input() {
 					meta[k] = v
 				}
 				call.ResMetadata = meta
-				call.Error = &errs.Error{
-					Type: res.Err.Type,
-					Code: res.Err.Code,
-					Msg:  res.Err.Msg,
-				}
+			}
+			call.Error = &errs.Error{
+				Type: res.Err.Type,
+				Code: res.Err.Code,
+				Msg:  res.Err.Msg,
 			}
 			call.done()
 		default:
@@ -259,6 +262,7 @@ func (client *Client) input() {
 				} else {
 					err = cc.Decode(data, call.Reply)
 					if err != nil {
+						log.Error("data decode fail")
 						call.Error = ServiceError(err.Error())
 					}
 				}

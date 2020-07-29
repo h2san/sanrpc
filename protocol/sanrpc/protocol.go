@@ -33,12 +33,15 @@ type SanRPCProtocol struct {
 	protocol.BaseService
 }
 
-func (p *SanRPCProtocol) DecodeMessage(r io.Reader) (protocol.Message, error) {
+func (p *SanRPCProtocol) Handshake(r io.ReadWriter) error {
+	return nil
+}
+
+func (p *SanRPCProtocol) DecodeMessage(r io.ReadWriter) (protocol.Message, error) {
 
 	head := make([]byte, headLen)
 	n ,err := io.ReadFull(r,head)
 	if err != nil {
-		log.Debug(err)
 		return nil, err
 	}
 	if n != headLen {
@@ -75,7 +78,6 @@ func (p *SanRPCProtocol) DecodeMessage(r io.Reader) (protocol.Message, error) {
 func (p *SanRPCProtocol) EncodeMessage(msg protocol.Message) ([]byte,error) {
 
 	m, ok := msg.(*MessageProtocol)
-	log.Debug(msg)
 	if !ok {
 		log.Errorf("rpc: encoding msg error %+v", msg)
 		return nil , ErrMsgAssertInvalid
@@ -129,16 +131,15 @@ func (p *SanRPCProtocol) DisspatchMessage(req *MessageProtocol, resp *MessagePro
 
 	ctx:=context.Background()
 
-
+	log.Debugf("req:%+v", argv)
 	err = service.Call(ctx, mtype, reflect.ValueOf(argv), reflect.ValueOf(replyv))
-
+	log.Debugf("resp:%+v", replyv)
 
 	if err != nil {
 		return err
 	}
 
 	data, err := cc.Encode(replyv)
-	log.Debug(data)
 	if err != nil {
 		return errs.ErrServerEncodeDataErr
 	}
@@ -154,14 +155,16 @@ func (p *SanRPCProtocol) HandleMessage(ctx context.Context, r protocol.Message) 
 
 	resp := &MessageProtocol{
 		Err:&ErrMsg{
-
+			Code:0,
+			Type:1,
+			Msg:"success",
 		},
 	}
 
-	log.Infof("req msg: %v", req)
+	log.Debugf("req msg: %v", req)
 	err := p.DisspatchMessage(req, resp)
-	log.Error(err)
 	if err != nil {
+		log.Error(err)
 		if e, ok := err.(*errs.Error); ok {
 			resp.Err.Type = e.Type
 			resp.Err.Code = e.Code
@@ -171,13 +174,7 @@ func (p *SanRPCProtocol) HandleMessage(ctx context.Context, r protocol.Message) 
 		resp.Err.Type = 0
 		resp.Err.Code = 999
 		resp.Err.Msg = err.Error()
-		return resp, nil
 	}
-	log.Infof("resp msg: %v", resp)
-	resp.Err = &ErrMsg{
-		Code:0,
-		Type:1,
-		Msg:"success",
-	}
+	log.Debugf("resp msg: %v", resp)
 	return resp, nil
 }

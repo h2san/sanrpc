@@ -9,8 +9,6 @@ type ServiceConfig struct {
 	Name string
 	NetWork string
 	Address string
-	TLSCertFile string
-	TLSKeyFile string
 
 	InMsgChanSize uint32
 	OutMsgChanSize uint32

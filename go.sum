@@ -10,6 +10,8 @@ github.com/golang/protobuf v1.3.2 h1:6nsPYzhq5kReh6QImI3k5qWzO4PEbvbIW2cwSfR/6xs
 github.com/golang/protobuf v1.3.2/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/hillguo/sanhttp v0.0.0-20200116135434-0346ad5e2f69 h1:jdFMQ53m1O/OE6Yw54ioGeYSHahinDXAUzr7ZROpeeg=
 github.com/hillguo/sanhttp v0.0.0-20200116135434-0346ad5e2f69/go.mod h1:ZW9HL57rdFPLQj4HWNPZXLDc/5g+04+9paUWku4pTzU=
+github.com/hillguo/sanhttp v0.0.0-20200324135546-a8011f2d2ca8 h1:fmYCneKXPXtRRIJWckiGmzDoEih4lbzEa1uJKYIGQ0o=
+github.com/hillguo/sanhttp v0.0.0-20200324135546-a8011f2d2ca8/go.mod h1:ZW9HL57rdFPLQj4HWNPZXLDc/5g+04+9paUWku4pTzU=
 github.com/hillguo/sanlog v0.0.0-20191108155211-bfd64160ecd6 h1:IZXYw/04/dgIM2zczDWAXQerks/TEmKGKnH8Us4fiu0=
 github.com/hillguo/sanlog v0.0.0-20191108155211-bfd64160ecd6/go.mod h1:1f4dTTOGx4L2f+dlqim+P/MlpKMoeG2+XiQpU6PAw8I=
 github.com/mattn/go-colorable v0.1.4 h1:snbPLB8fVfU9iwbbo30TPtbLRzwWu6aJS6Xh4eaaviA=

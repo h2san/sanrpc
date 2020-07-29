@@ -13,8 +13,7 @@ type Options struct {
 
 	Address        string
 	NetWork        string
-	TLSCertFile    string
-	TLSKeyFile     string
+
 	MsgProtocol    protocol.MsgProtocol
 }
 
