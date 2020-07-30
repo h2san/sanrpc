@@ -92,7 +92,7 @@ func (t *tcpTransport) server(ln net.Listener) error {
 		t.activeConn[conn] = struct{}{}
 		t.mu.Unlock()
 
-		log.Infof("rpc: receive a client conn, remote addr: %+v", conn.RemoteAddr())
+		log.Infof("rpc: receive a client1 conn, remote addr: %+v", conn.RemoteAddr())
 
 		go t.serveConn(conn)
 	}
@@ -184,7 +184,7 @@ func (t *tcpTransport) serveConn(conn net.Conn) {
 				default:
 					t0 := time.Now()
 					if t.s.opts.ReadTimeout != 0 {
-						conn.SetReadDeadline(t0.Add(time.Duration(1)))
+						conn.SetReadDeadline(t0.Add(time.Duration(t.s.opts.ReadTimeout)))
 					}
 					rpc, ok := t.s.opts.MsgProtocol.(protocol.RpcMsgProtocol)
 					if !ok {
@@ -195,7 +195,7 @@ func (t *tcpTransport) serveConn(conn net.Conn) {
 					req, err := rpc.DecodeMessage(conn)
 					if err != nil {
 						if err == io.EOF {
-							log.Infof("client has closed this connection: %s", conn.RemoteAddr().String())
+							log.Infof("client1 has closed this connection: %s", conn.RemoteAddr().String())
 						} else if strings.Contains(err.Error(), "use of closed network connection") {
 							log.Infof("sanrpc: connection %s is closed", conn.RemoteAddr().String())
 						} else {

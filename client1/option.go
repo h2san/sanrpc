@@ -1,4 +1,4 @@
-package client
+package client1
 
 import (
 	"crypto/tls"
@@ -17,7 +17,7 @@ type Option struct {
 	HeartbeatInterval time.Duration
 }
 
-// DefaultOption is a common option configuration for client.
+// DefaultOption is a common option configuration for client1.
 var DefaultOption = Option{
 	Retries:        3,
 	ConnectTimeout: 10 * time.Second,

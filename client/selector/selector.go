@@ -1,32 +1,28 @@
 package selector
 
-import "context"
-
-type SelectMode int
-
-const (
-	RandomSelect SelectMode = iota
-	RoundRobin
-	WeightedRoundRobin
-	ConsistentHash
+import (
+	"github.com/hillguo/sanrpc/client/node"
 )
 
+// Selector 路由组件接口
 type Selector interface {
-	Select(ctx context.Context, servicePath, serviceMethod string, args interface{}) string
-	UpdateServer(servers map[string]string)
+	Select(list []*node.Node) (node *node.Node, err error)
 }
 
-func NewSelector(selectMode SelectMode, servers map[string]string) Selector {
-	switch selectMode {
-	case RandomSelect:
-		return newRandomSelector(servers)
-	case RoundRobin:
-		return newRoundRobinSelector(servers)
-	case WeightedRoundRobin:
-		return newWeightedRoundRobinSelector(servers)
-	case ConsistentHash:
-		return newConsistentHashSelector(servers)
-	default:
-		return newRandomSelector(servers)
-	}
+var (
+	selectors = make(map[string]Selector)
+)
+
+var DefaultSelector = &RandomSelector{}
+
+// Register 注册selector，如l5 dns cmlb tseer
+func Register(name string, s Selector) {
+	selectors[name] = s
 }
+
+// Get 获取selector
+func GetSelector(name string) Selector {
+	s := selectors[name]
+	return s
+}
+

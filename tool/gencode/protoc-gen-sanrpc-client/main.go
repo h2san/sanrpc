@@ -6,14 +6,14 @@ import (
 	"github.com/hillguo/sanrpc/tool/gencode"
 )
 
-var formatPart1 = `package client
+var formatPart1 = `package client1
 
 import (
 	"context"
 
-	"github.com/hillguo/sanrpc/client/selector"
-	"github.com/hillguo/sanrpc/client/servicediscovery"
-	 xclient "github.com/hillguo/sanrpc/client"
+	"github.com/hillguo/sanrpc/client1/selector"
+	"github.com/hillguo/sanrpc/client1/servicediscovery"
+	 xclient "github.com/hillguo/sanrpc/client1"
 	pb "%s/pb"
 )
 
@@ -47,7 +47,7 @@ func genClient(protoInfo *gencode.ProtoFileInfo) (string, string) {
 		data += fmt.Sprintf(formatFunc, protoInfo.ServiceName, methodInfo.MethodName,
 			methodInfo.InputType, methodInfo.OutputType, methodInfo.MethodName)
 	}
-	return protoInfo.ModuleName + "client.go", data
+	return protoInfo.ModuleName + "client1.go", data
 }
 
 func main() {

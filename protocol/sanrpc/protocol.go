@@ -22,8 +22,8 @@ var (
 	ErrReadMsgBodyInvalid   = errors.New("read msg body num invalid")
 	ErrServerMarshalFail    = errors.New("server marshal response interface invalid")
 	ErrServerUnmarshalFail    = errors.New("server unmarshal request interface invalid")
-	ErrClientMarshalFail    = errors.New("client marshal request interface invalid")
-	ErrClientUnmarshalFail  = errors.New("client unmarshal response interface invalid")
+	ErrClientMarshalFail    = errors.New("client1 marshal request interface invalid")
+	ErrClientUnmarshalFail  = errors.New("client1 unmarshal response interface invalid")
 	ErrMsgAssertInvalid = errors.New("msg assert fail")
 )
 

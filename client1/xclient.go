@@ -1,4 +1,4 @@
-package client
+package client1
 
 import (
 	"context"
@@ -7,8 +7,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/hillguo/sanrpc/client/selector"
-	"github.com/hillguo/sanrpc/client/servicediscovery"
+	"github.com/hillguo/sanrpc/client1/selector"
+	"github.com/hillguo/sanrpc/client1/servicediscovery"
 )
 
 var (
@@ -106,7 +106,7 @@ func (c *xClient) Auth(auth string) {
 	c.auth = auth
 }
 
-// selects a client from candidates base on c.selectMode
+// selects a client1 from candidates base on c.selectMode
 func (c *xClient) selectClient(ctx context.Context, servicePath, serviceMethod string, args interface{}) (string, RPCClient, error) {
 	c.mu.Lock()
 	k := c.selector.Select(ctx, servicePath, serviceMethod, args)
@@ -270,7 +270,7 @@ func (c *xClient) Call(ctx context.Context, serviceMethod string, args interface
 	}
 }
 
-// Close closes this client and its underlying connnections to services.
+// Close closes this client1 and its underlying connnections to services.
 func (c *xClient) Close() error {
 	c.isShutdown = true
 

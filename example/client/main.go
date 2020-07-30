@@ -3,16 +3,16 @@ package main
 import (
 	"context"
 	log "github.com/hillguo/sanlog"
-	"github.com/hillguo/sanrpc/client"
+	"github.com/hillguo/sanrpc/client1"
 	"github.com/hillguo/sanrpc/example"
 )
 
 func main()  {
 
-	opt := client.Option{
+	opt := client1.Option{
 
 	}
-	c := client.NewClient(opt)
+	c := client1.NewClient(opt)
 	err := c.Connect("tcp","127.0.0.1:8000")
 	if err != nil {
 		log.Fatal(err)

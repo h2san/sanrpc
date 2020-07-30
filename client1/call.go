@@ -1,4 +1,4 @@
-package client
+package client1
 
 import (
 	log "github.com/hillguo/sanlog"
@@ -13,7 +13,7 @@ type Call struct {
 	Args          interface{}
 	Reply         interface{}
 	Error         error
-	Done          chan *Call
+	CallDoneChan          chan CallDoneSignal
 	Raw           bool
 
 	// 每个调用都可以设置编码与压缩类型
@@ -21,9 +21,14 @@ type Call struct {
 	CompressType  codec.CompressType
 }
 
+type CallDoneSignal struct {
+
+}
+var CallDone CallDoneSignal
+
 func (call *Call) done() {
 	select {
-	case call.Done <- call:
+	case call.CallDoneChan <- CallDone:
 	default:
 		log.Info("rpc: discarding Call reply due to insufficient Done chan capacity")
 
