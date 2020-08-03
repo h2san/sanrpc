@@ -1,4 +1,4 @@
-package client1
+package client_bk
 
 import (
 	"crypto/tls"
@@ -31,7 +31,7 @@ func (client *Client) Connect(network, address string) error {
 		go client.input()
 
 		if client.option.Heartbeat && client.option.HeartbeatInterval > 0 {
-			//go client1.heartbeat()
+			//go client_bk.heartbeat()
 		}
 
 	}

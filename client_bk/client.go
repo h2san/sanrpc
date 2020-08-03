@@ -1,6 +1,7 @@
-package client1
+package client_bk
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"io"
@@ -30,7 +31,7 @@ func (e ServiceError) Error() string {
 
 type seqKey struct{}
 
-// RPCClient is interface that defines one client1 to call one server.
+// RPCClient is interface that defines one client to call one server.
 type RPCClient interface {
 	Connect(network, address string) error
 	Go(ctx context.Context, servicePath, serviceMethod string, args interface{}, reply interface{}, done chan *Call) *Call
@@ -42,6 +43,7 @@ type RPCClient interface {
 type Client struct {
 	option Option
 	Conn   net.Conn
+	r      *bufio.Reader
 
 	mutex    sync.Mutex
 	seq      uint64
@@ -63,8 +65,7 @@ func (client *Client) IsClosing() bool {
 func (client *Client) IsShutdown() bool {
 	return client.shutdown
 }
-
-func (client *Client) Go(ctx context.Context, servicePath, serviceMethod string, args interface{}, reply interface{}, done chan CallDoneSignal)  {
+func (client *Client) Go(ctx context.Context, servicePath, serviceMethod string, args interface{}, reply interface{}, done chan *Call) *Call {
 	call := new(Call)
 	call.ServicePath = servicePath
 	call.ServiceMethod = serviceMethod
@@ -77,8 +78,17 @@ func (client *Client) Go(ctx context.Context, servicePath, serviceMethod string,
 	call.Reply = reply
 	call.CompressType = codec.CompressNone
 	call.SerializeType = codec.ProtoBuffer
-	call.CallDoneChan = done
+
+	if done == nil {
+		done = make(chan *Call, 10)
+	} else {
+		if cap(done) == 0 {
+			log.Panic("rpc: done channel is unbuffered")
+		}
+	}
+	call.Done = done
 	client.send(ctx, call)
+	return call
 }
 
 //Call 同步调用
@@ -91,9 +101,7 @@ func (client *Client) Call(ctx context.Context, servicePath, serviceMethod strin
 	seq := new(uint64)
 	ctx = context.WithValue(ctx, seqKey{}, seq)
 	log.Debugf("req %+v", args)
-
-	callDoneChan := make(chan CallDoneSignal, 1)
-	client.Go(ctx, servicePath, serviceMethod, args, reply, callDoneChan)
+	DoneChan := client.Go(ctx, servicePath, serviceMethod, args, reply, make(chan *Call, 1)).Done
 	var err error
 	select {
 	case <-ctx.Done():
@@ -106,11 +114,7 @@ func (client *Client) Call(ctx context.Context, servicePath, serviceMethod strin
 			call.done()
 		}
 		err = ctx.Err()
-	case <-callDoneChan:
-		client.mutex.Lock()
-		call := client.pending[*seq]
-		delete(client.pending, *seq)
-		client.mutex.Unlock()
+	case call := <-DoneChan:
 		err = call.Error
 		meta := ctx.Value(ResMetaDataKey)
 		if meta != nil && len(call.ResMetadata) > 0 {
@@ -290,7 +294,7 @@ func (client *Client) input() {
 	}
 	client.mutex.Unlock()
 	if err != nil && err != io.EOF && !closing {
-		log.Error("sanrpc: client1 protocol error:", err)
+		log.Error("sanrpc: client protocol error:", err)
 	}
 }
 
