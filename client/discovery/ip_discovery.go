@@ -25,3 +25,7 @@ func (*IPDiscovery) List(serviceName string) ([]*node.Node, error) {
 	}
 	return nodes, nil
 }
+
+func (*IPDiscovery) Name()string {
+	return "ip"
+}

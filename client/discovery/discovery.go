@@ -7,6 +7,7 @@ import (
 
 type Discovery interface {
 	List(serviceName string) ([]*node.Node,error)
+	Name() string
 }
 
 var (
@@ -15,7 +16,6 @@ var (
 )
 
 var DefaultDiscovery = &IPDiscovery{}
-
 
 // Register 注册discovery
 func Register(name string, s Discovery) {

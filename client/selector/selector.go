@@ -7,6 +7,7 @@ import (
 // Selector 路由组件接口
 type Selector interface {
 	Select(list []*node.Node) (node *node.Node, err error)
+	Name() string
 }
 
 var (

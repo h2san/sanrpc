@@ -24,4 +24,7 @@ func (s *RandomSelector) Select(list []*node.Node) (*node.Node,error) {
 	return list[i],nil
 }
 
+func (s *RandomSelector) Name()string {
+	return "random"
+}
 
